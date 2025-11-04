@@ -34,7 +34,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Test
-        run: make build-dev && make test
+        run: mkdir -p db/ && make build-dev && make test
 
   build:
     runs-on: ubuntu-latest
