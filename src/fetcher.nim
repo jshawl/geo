@@ -1,4 +1,5 @@
 import httpclient, os
+import db_connector/db_sqlite
 
 type
   HttpGetProc* = proc(url: string): string {.closure.}
@@ -22,3 +23,11 @@ when isMainModule:
   let result = fetchData(fetcher)
   echo "done:"
   echo result
+  let db = open("mytest.db", "", "", "")
+  db.exec(sql"CREATE TABLE IF NOT EXISTS items (id INTEGER, name TEXT)")
+
+  for item in 1..10:
+    db.exec(sql"INSERT INTO items VALUES (?, ?)", 
+          item, "yay")
+
+  db.close()
