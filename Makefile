@@ -1,4 +1,4 @@
-.PHONY: dev test
+.PHONY: build dev test fetcher
 IMAGE=nimlang/nim:2.2.6-alpine-slim
 
 dev-fetcher:
@@ -9,7 +9,7 @@ dev-fetcher:
 		nim r -d:ssl --hints:off src/fetcher.nim
 
 test:
-	docker run --rm -v $(PWD):/app app:dev nim r --hints:off tests/test_all.nim
+	docker run --rm -v $(PWD):/app app:dev nim r -d:ssl --hints:off tests/test_all.nim
 
 build-dev:
 	docker build -f Dockerfile.dev -t app:dev .
