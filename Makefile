@@ -10,11 +10,8 @@ dev-fetcher:
 		nim r -d:ssl --hints:off src/fetcher.nim
 
 test:
-	@docker run --rm -it \
-		-v $(PWD):/app \
-		-w /app \
-		$(IMAGE) \
-		nim r --hints:off tests/test_all.nim
+	docker build -f Dockerfile.dev -t main:dev .
+	docker run --rm main:dev nim r --hints:off tests/test_all.nim
 
 build:
 	docker build -t main .
