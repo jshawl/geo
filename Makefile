@@ -1,21 +1,26 @@
-.PHONY: build dev test fetcher
-IMAGE=nimlang/nim:2.2.6-alpine-slim
+.PHONY: build build-dev fetcher fetcher-dev test 
 
-dev-fetcher:
-	@docker run --rm -it \
-		-v $(PWD):/app \
+# Development
+fetcher-dev:
+	docker run --rm --interactive --tty \
+		--volume $(PWD):/app \
 		--env-file .env \
-		app:dev \
-		nim r -d:ssl --hints:off src/fetcher.nim
-
-test:
-	docker run --rm -v $(PWD):/app app:dev nim r -d:ssl --hints:off tests/test_all.nim
+		app:dev nimble run fetcher
 
 build-dev:
-	docker build -t app:dev . --target=builder
+	docker build --tag app:dev --target builder . 
 
+test:
+	docker run --rm \
+		--volume $(PWD):/app \
+		app:dev nimble test
+
+# Production
 build:
-	docker build -t app .
+	docker build --tag app .
 
 fetcher:
-	docker run --rm -it --env-file=.env -v $(PWD)/db:/app/db app /app/fetcher
+	docker run --rm --interactive --tty \
+		--volume $(PWD)/db:/app/db \
+		--env-file .env \
+		app /app/fetcher
