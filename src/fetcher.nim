@@ -1,11 +1,12 @@
 import db_connector/db_sqlite
 import json
-import std / [net, httpclient, os, posix]
+import std / [net, httpclient, os, posix, logging]
 
+var logger = newConsoleLogger(fmtStr="[$datetime] - $levelname: ")
 var running = true
 
 proc handleSignal() {.noconv.} =
-  echo "\nReceived signal, shutting down..."
+  logger.log(lvlInfo, "Received SIGINT, shutting down...")
   running = false
 
 setControlCHook(handleSignal)
@@ -38,16 +39,17 @@ proc fetchData*(db: DbConn, f: DataFetcher): JsonNode =
   result = parseJson(f.httpGet(f.url))
   try:
     insert(db, $result["created_at"])
+    logger.log(lvlInfo, "inserted 1 row")
   except:
-    echo getCurrentExceptionMsg()
+    logger.log(lvlWarn, getCurrentExceptionMsg())
 
 when isMainModule:
   let baseUrl: string = os.getEnv("BASE_URL")
   let fetcher: DataFetcher = newDataFetcher(realHttpGet, baseUrl)
   let db = setupDb("db/")
+  let oneHourInMilliseconds = 1000 * 60 * 60
   while running:
     discard fetchData(db, fetcher)
-    echo "success!"
-    sleep(10000)
+    sleep(oneHourInMilliseconds)
   db.close()
-  echo "exiting..."
+  logger.log(lvlInfo, "byeeee")

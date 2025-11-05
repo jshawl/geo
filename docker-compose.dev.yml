@@ -16,5 +16,6 @@ services:
       context: .
       target: builder
     command: nimble test
+    pull_policy: build
     volumes:
       - ./db:/app/db
