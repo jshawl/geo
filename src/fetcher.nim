@@ -1,7 +1,14 @@
 import db_connector/db_sqlite
 import json
-import std / [net, httpclient, os]
-import std/net
+import std / [net, httpclient, os, posix]
+
+var running = true
+
+proc handleSignal() {.noconv.} =
+  echo "\nReceived signal, shutting down..."
+  running = false
+
+setControlCHook(handleSignal)
 
 type
   HttpGetProc* = proc(url: string): string {.closure.}
@@ -38,6 +45,9 @@ when isMainModule:
   let baseUrl: string = os.getEnv("BASE_URL")
   let fetcher: DataFetcher = newDataFetcher(realHttpGet, baseUrl)
   let db = setupDb("db/")
-  discard fetchData(db, fetcher)
-  echo "success!"
+  while running:
+    discard fetchData(db, fetcher)
+    echo "success!"
+    sleep(10000)
   db.close()
+  echo "exiting..."

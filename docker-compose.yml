@@ -1,0 +1,9 @@
+services:
+  worker:
+    image: ghcr.io/jshawl/nim-deployment:main
+    command: /app/build/fetcher
+    env_file: .env
+    volumes:
+      - ./db:/app/db
+    stop_signal: SIGINT
+    pull_policy: always
