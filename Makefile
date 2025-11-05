@@ -9,7 +9,7 @@ dev-fetcher:
 		nim r -d:ssl --hints:off src/fetcher.nim
 
 test:
-	docker run --rm -v $(PWD):/app app:dev nim r -d:ssl --hints:off tests/test_all.nim
+	docker run --rm -v $(PWD):/app app:dev nimble test
 
 build-dev:
 	docker build -t app:dev . --target=builder
