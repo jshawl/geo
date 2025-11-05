@@ -12,7 +12,7 @@ test:
 	docker run --rm -v $(PWD):/app app:dev nim r -d:ssl --hints:off tests/test_all.nim
 
 build-dev:
-	docker build -f Dockerfile.dev -t app:dev .
+	docker build -t app:dev . --target=builder
 
 build:
 	docker build -t app .
