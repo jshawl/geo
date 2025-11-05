@@ -23,7 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Test
-        run: mkdir -p db/ && make build-dev && make test
+        run: mkdir -p db/ && make test
 
   build:
     runs-on: ubuntu-latest

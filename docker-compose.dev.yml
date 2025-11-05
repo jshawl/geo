@@ -1,0 +1,20 @@
+services:
+  worker:
+    image: app
+    build:
+      context: .
+      target: builder
+    pull_policy: build
+    command: /app/build/fetcher
+    env_file: .env
+    volumes:
+      - ./db:/app/db
+    stop_signal: SIGINT
+
+  test:
+    build:
+      context: .
+      target: builder
+    command: nimble test
+    volumes:
+      - ./db:/app/db
