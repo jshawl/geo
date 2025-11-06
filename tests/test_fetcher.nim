@@ -1,6 +1,6 @@
 import ../src/fetcher
+import ../src/database
 import unittest
-import db_connector/db_sqlite
 import std/[os, tempfiles]
 
 proc createMockGet(response: string): proc(url: string): string =
@@ -14,18 +14,16 @@ suite "fetcher":
     let fetcher = DataFetcher(httpGet: mockGet, url: "http://test")
   teardown:
     removeDir(tmpDir)
-    db.close()
+    db.closeConnection()
 
   test "fetchData inserts values":
-    let query = sql"SELECT * from items;"
-    check db.getAllRows(query).len == 0
+    check db.findMultiple().len == 0
     discard fetchData(db, fetcher)
-    check db.getAllRows(query).len == 1
+    check db.findMultiple().len == 1
 
   test "fetchData does not insert duplicate values":
-    let query = sql"SELECT * from items;"
-    check db.getAllRows(query).len == 0
+    check db.findMultiple().len == 0
     discard fetchData(db, fetcher)
     discard fetchData(db, fetcher)
     discard fetchData(db, fetcher)
-    check db.getAllRows(query).len == 1
+    check db.findMultiple().len == 1

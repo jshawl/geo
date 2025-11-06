@@ -1,6 +1,6 @@
-import db_connector/db_sqlite
 import json
 import std / [net, httpclient, os, posix, logging]
+import ./database
 
 var logger = newConsoleLogger(fmtStr="[$datetime] - $levelname: ")
 var running = true
@@ -27,14 +27,6 @@ proc realHttpGet*(url: string): string =
   writeFile(certFile, embeddedCaCerts)
   newHttpClient(sslContext=newContext(verifyMode=CVerifyPeer,caFile=certFile)).getContent(url)
 
-proc setupDb*(dir: string): DbConn =
-  let db = open(dir & "mytest.db", "", "", "")
-  db.exec(sql"CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)")
-  return db
-
-proc insert(db: DbConn, value: string) =
-  db.exec(sql"INSERT INTO items (name) VALUES (?)", value)
-
 proc fetchData*(db: DbConn, f: DataFetcher): JsonNode =
   result = parseJson(f.httpGet(f.url))
   try:
@@ -51,5 +43,5 @@ when isMainModule:
   while running:
     discard fetchData(db, fetcher)
     sleep(oneHourInMilliseconds)
-  db.close()
+  db.closeConnection()
   logger.log(lvlInfo, "byeeee")
