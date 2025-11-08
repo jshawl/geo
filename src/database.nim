@@ -3,7 +3,7 @@ import db_connector/db_sqlite
 export DbConn 
 
 proc setupDb*(dir: string): DbConn =
-  let db = open(dir & "mytest.db", "", "", "")
+  let db = open(dir & "app.db", "", "", "")
   db.exec(sql"CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)")
   return db
 

@@ -1,0 +1,33 @@
+[
+  {
+    "segments": [
+      {
+        "type": "place",
+        "startTime": "20251107T183043-0500",
+        "place": {
+          "location": {
+            "lat": 1.23456789,
+            "lon": -0.987654321
+          }
+        }
+      },
+      {
+        "type": "move",
+        "activities": [
+          {
+            "trackPoints": [
+              {
+                "time": "20251107T183044-0500",
+                "lat": -0.987654321,
+                "lon": 1.23456789
+              }
+            ]
+          },
+          {
+            "trackPoints": []
+          }
+        ]
+      }
+    ]
+  }
+]

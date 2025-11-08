@@ -5,7 +5,7 @@ author        = "Jesse Shawl"
 description   = "A new awesome nimble package"
 license       = "MIT"
 srcDir        = "src"
-bin           = @["fetcher"]
+bin           = @["fetcher", "importer"]
 binDir        = "build"
 
 
