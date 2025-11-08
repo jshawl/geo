@@ -1,20 +1,21 @@
+x-common: &common-config
+  image: ghcr.io/jshawl/nim-deployment:main
+  env_file: .env
+  volumes:
+    - ./db:/app/db
+  stop_signal: SIGINT
+  pull_policy: always
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   worker:
-    image: ghcr.io/jshawl/nim-deployment:main
+    <<: *common-config
     command: /app/build/fetcher
-    env_file: .env
-    volumes:
-      - ./db:/app/db
-    stop_signal: SIGINT
-    pull_policy: always
+
   backups:
-    image: app
-    build:
-      context: .
-      target: builder
+    <<: *common-config
     command: /app/build/backup
-    env_file: .env
-    volumes:
-      - ./db:/app/db
-    stop_signal: SIGINT
-    pull_policy: build
