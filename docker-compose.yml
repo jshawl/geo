@@ -7,3 +7,14 @@ services:
       - ./db:/app/db
     stop_signal: SIGINT
     pull_policy: always
+  backups:
+    image: app
+    build:
+      context: .
+      target: builder
+    command: /app/build/backup
+    env_file: .env
+    volumes:
+      - ./db:/app/db
+    stop_signal: SIGINT
+    pull_policy: build
