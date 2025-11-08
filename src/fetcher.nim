@@ -1,5 +1,5 @@
 import json
-import std / [net, httpclient, os, posix, logging, times]
+import std / [net, httpclient, os, logging, times]
 import ./database
 
 var logger = newConsoleLogger(fmtStr="[$datetime] - $levelname: ")
