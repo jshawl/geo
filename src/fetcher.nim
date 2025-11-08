@@ -1,12 +1,12 @@
 import json
-import std / [net, httpclient, os, logging, times]
+import std / [net, httpclient, os, times]
 import ./database
+import ./logger
 
-var logger = newConsoleLogger(fmtStr="[$datetime] - $levelname: ")
 var running = true
 
 proc handleSignal() {.noconv.} =
-  logger.log(lvlInfo, "Received SIGINT, shutting down...")
+  info("Received SIGINT, shutting down...")
   running = false
 
 setControlCHook(handleSignal)
@@ -36,9 +36,9 @@ proc fetchData*(db: DbConn, f: DataFetcher): JsonNode =
       lon: result["Longitude"].getFloat()
     )
     insert(db, event)
-    logger.log(lvlInfo, "inserted 1 row")
+    info("inserted 1 row")
   except:
-    logger.log(lvlWarn, getCurrentExceptionMsg())
+    warn(getCurrentExceptionMsg())
 
 when isMainModule:
   let baseUrl: string = os.getEnv("BASE_URL")
@@ -49,4 +49,4 @@ when isMainModule:
     discard fetchData(db, fetcher)
     sleep(oneHourInMilliseconds)
   db.closeConnection()
-  logger.log(lvlInfo, "byeeee")
+  info("byeeee")
