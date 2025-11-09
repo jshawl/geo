@@ -42,6 +42,8 @@ proc fetchData*(db: DbConn, f: DataFetcher): JsonNode =
       inc inserted
     except: discard
   info(fmt"inserted {inserted}/{results.len} events")
+  if inserted > 0:
+    discard f.httpGet(os.getEnv("HEALTHCHECK_URL"))
 
 when isMainModule:
   let yesterday = now() - 1.days
