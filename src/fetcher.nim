@@ -52,10 +52,10 @@ when isMainModule:
   let dateTo = tomorrow.format("yyyy-MM-dd")
   let baseUrl: string = os.getEnv("BASE_URL") & "&from=" & dateFrom & "&to=" & dateTo
   let fetcher: DataFetcher = newDataFetcher(realHttpGet, baseUrl)
-  let db = setupDb("db/")
   let oneHourInMilliseconds = 1000 * 60 * 60
   while running:
+    let db = setupDb("db/")
     discard fetchData(db, fetcher)
+    db.closeConnection()
     sleep(oneHourInMilliseconds)
-  db.closeConnection()
   info("byeeee")
