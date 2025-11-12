@@ -1,16 +1,10 @@
-.PHONY: build build-dev fetcher fetcher-dev test
+.PHONY: build build-dev worker test
 
 build:
 	docker build --tag app .
 
 test:
-	docker compose --file docker-compose.dev.yml run --rm test nimble test
-
-importer:
-	docker compose --file docker-compose.dev.yml run --rm importer /app/db/mydatabase.sql
+	docker compose run --rm test
 
 worker:
 	docker compose run --rm worker
-
-worker-dev:
-	docker compose --file docker-compose.dev.yml run --rm worker

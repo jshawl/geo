@@ -1,4 +1,4 @@
-import ../src/fetcher
+import ../src/worker
 import ../src/database
 import unittest
 import std/[os, tempfiles, strutils]
@@ -6,7 +6,7 @@ import std/[os, tempfiles, strutils]
 proc createMockGet(response: string): proc(url: string): string =
   return proc(url: string): string = response
 
-suite "fetcher":
+suite "worker":
   setup:
     let tmpDir = createTempDir("tmp", "", "db")
     let db = setupDb(tmpDir & "/")

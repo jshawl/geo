@@ -14,7 +14,7 @@ x-common: &common-config
 services:
   worker:
     <<: *common-config
-    command: /app/build/fetcher
+    command: /app/build/worker
 
   backups:
     <<: *common-config
