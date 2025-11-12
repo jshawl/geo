@@ -1,0 +1,15 @@
+x-common: &common-config
+  build:
+    context: .
+    target: builder
+  volumes:
+    - ./:/app/
+
+services:
+  worker:
+    command: nimble run worker
+    <<: *common-config
+
+  test:
+    <<: *common-config
+    command: nimble test
