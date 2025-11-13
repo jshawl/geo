@@ -32,6 +32,7 @@ proc rotateBackups(backupDir: string, keepCount: int) =
 
 when isMainModule:
     while running:
+        sleep(3 * 60 * 60 * 1000)
         info("Backing up...")
         let db = open("db/app.db", "", "", "")
         let timestamp = now().format("yyyyMMdd-HHmmss")
@@ -39,4 +40,4 @@ when isMainModule:
         db.exec(sql"VACUUM INTO ?", backupPath)
         db.close()
         rotateBackups("db", keepCount = 7)
-        sleep(24 * 60 * 60 * 1000)
+        sleep(21 * 60 * 60 * 1000)

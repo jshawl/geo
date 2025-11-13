@@ -28,19 +28,20 @@ services:
       - -c
       - |
         while true; do
+          sleep 11800
           echo "[$(date -u +"%FT%T")] syncing to s3..."
           aws s3 sync /app/db/ s3://$AWS_BUCKET_NAME/backups/ \
             --exclude "*" \
             --include "backup-*.db" \
             --endpoint-url $AWS_ENDPOINT_URL
           echo "[$(date -u +"%FT%T")] sync to s3 completed."
-          sleep 86400
+          sleep 74600
         done
     volumes:
       - ./db:/app/db
 
   proxy:
-    image: nginx:latest
+    image: nginx:1.29.3
     ports:
       - "80:80"
     configs:
@@ -51,6 +52,8 @@ services:
       echo \$HTTP_AUTH_USER:\$(openssl passwd -apr1 \$HTTP_AUTH_PASSWORD) > /etc/nginx/.htpasswd
       exec nginx -g 'daemon off;'
       "
+    volumes:
+      - ./public:/usr/share/nginx/html
 
 configs:
   nginx_config:
@@ -64,10 +67,11 @@ configs:
         # }
         server {
           listen 80;
+          root /usr/share/nginx/html;
           location / {
             auth_basic "Auth required";
             auth_basic_user_file /etc/nginx/.htpasswd;
-
+            try_files $$uri $$uri/ =404;
             # proxy_pass http://backend;
           }
         }
