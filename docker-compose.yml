@@ -16,6 +16,10 @@ services:
     <<: *common-config
     command: /app/build/worker
 
+  server:
+    <<: *common-config
+    command: /app/build/server
+
   backups:
     <<: *common-config
     command: /app/build/backup
@@ -47,6 +51,8 @@ services:
     configs:
       - source: nginx_config
         target: /etc/nginx/nginx.conf
+    links:
+      - server
     command: |
       /bin/bash -c "
       echo \$HTTP_AUTH_USER:\$(openssl passwd -apr1 \$HTTP_AUTH_PASSWORD) > /etc/nginx/.htpasswd
@@ -62,17 +68,21 @@ configs:
         worker_connections 1024;
       }
       http {
-        # upstream backend {
-        #   server server:8080;
-        # }
+        limit_req_zone $$binary_remote_addr zone=rtlmtr:10m rate=10r/s;
+        upstream backend {
+          server server:8080;
+        }
         server {
           listen 80;
           root /usr/share/nginx/html;
+          auth_basic "Auth required";
+          auth_basic_user_file /etc/nginx/.htpasswd;
+          limit_req zone=rtlmtr burst=20 nodelay;
           location / {
-            auth_basic "Auth required";
-            auth_basic_user_file /etc/nginx/.htpasswd;
             try_files $$uri $$uri/ =404;
-            # proxy_pass http://backend;
+          }
+          location /api {
+            proxy_pass http://backend;
           }
         }
       }
