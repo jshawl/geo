@@ -1,5 +1,5 @@
 import db_connector/db_sqlite
-import std / [times]
+import std / [times, strutils, json]
 import ./geohash
 
 export DbConn 
@@ -37,6 +37,20 @@ proc insert*(db: DbConn, event: Event) =
 proc findMultiple*(db: DbConn): seq[Row] =
   let q = sql"SELECT created_at, lat, lon, geohash from events;"
   db.getAllRows(q)
+
+proc findMultipleEvents*(db: DbConn, date: string): seq[Event] =
+  if date.len == 0:
+    return result
+  let q = sql"SELECT created_at, lat, lon, geohash from events WHERE created_at LIKE ? limit 10;"
+  for row in db.rows(q, date & "%"):
+    result.add Event(
+      created_at: parse(row[0], "yyyy-MM-dd'T'HH':'mm':'ss'.'fff'Z'"),
+      lat: parseFloat(row[1]),
+      lon: parseFloat(row[2]),
+    )
+
+proc `%`*(dt: DateTime): JsonNode =
+  result = % $dt
 
 proc closeConnection*(db: DbConn) =
   db.close()

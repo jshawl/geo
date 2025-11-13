@@ -10,6 +10,10 @@ services:
     command: nimble run worker
     <<: *common-config
 
+  server:
+    command: nimble run server
+    <<: *common-config
+
   test:
     <<: *common-config
     command: nimble test
