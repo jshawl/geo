@@ -28,14 +28,14 @@ services:
       - -c
       - |
         while true; do
-          sleep 10800
+          sleep 11800
           echo "[$(date -u +"%FT%T")] syncing to s3..."
           aws s3 sync /app/db/ s3://$AWS_BUCKET_NAME/backups/ \
             --exclude "*" \
             --include "backup-*.db" \
             --endpoint-url $AWS_ENDPOINT_URL
           echo "[$(date -u +"%FT%T")] sync to s3 completed."
-          sleep 75600
+          sleep 74600
         done
     volumes:
       - ./db:/app/db
