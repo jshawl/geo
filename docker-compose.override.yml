@@ -13,3 +13,7 @@ services:
   test:
     <<: *common-config
     command: nimble test
+
+  proxy:
+    ports:
+      - "9000:80"
