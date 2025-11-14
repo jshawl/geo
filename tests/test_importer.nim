@@ -27,4 +27,4 @@ suite "importer":
     check results[0][0] == "2025-11-07T23:30:43.000Z"
     check parseFloat(results[0][1]) == 1.234
     check parseFloat(results[0][2]) == -5.678
-    check db.findMultipleEvents("2025-11-07").len == 2
+    check db.findMultipleEvents("2025-11-07", "2025-11-08").len == 2

@@ -38,11 +38,15 @@ proc findMultiple*(db: DbConn): seq[Row] =
   let q = sql"SELECT created_at, lat, lon, geohash from events;"
   db.getAllRows(q)
 
-proc findMultipleEvents*(db: DbConn, date: string): seq[Event] =
-  if date.len == 0:
+proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Event] =
+  if dateFrom.len == 0 or dateTo.len == 0:
     return result
-  let q = sql"SELECT created_at, lat, lon, geohash from events WHERE created_at LIKE ? limit 10;"
-  for row in db.rows(q, date & "%"):
+  let q = sql"""
+    SELECT created_at, lat, lon, geohash
+    FROM events
+    WHERE created_at BETWEEN ? AND ? LIMIT 1000;
+  """
+  for row in db.rows(q, dateFrom, dateTo):
     result.add Event(
       created_at: parse(row[0], "yyyy-MM-dd'T'HH':'mm':'ss'.'fff'Z'"),
       lat: parseFloat(row[1]),

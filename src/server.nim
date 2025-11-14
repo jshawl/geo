@@ -20,8 +20,8 @@ proc main {.async.} =
       echo "value:" & value
       queryParams[key] = value
     var jsonObj = %* []
-    if queryParams.hasKey("date"):
-      let events = db.findMultipleEvents(queryParams["date"])
+    if queryParams.hasKey("from") and queryParams.hasKey("to"):
+      let events = db.findMultipleEvents(queryParams["from"], queryParams["to"])
       jsonObj = %* events
     let headers = {"Content-type": "application/json; charset=utf-8"}
     await req.respond(Http200, jsonObj.pretty(), headers.newHttpHeaders())
