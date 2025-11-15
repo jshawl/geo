@@ -45,12 +45,11 @@ services:
       - ./db:/app/db
 
   proxy:
-    image: nginx:1.29.3
+    image: ghcr.io/jshawl/nim-deployment-proxy:main
+    env_file: .env
+    pull_policy: always
     ports:
       - "80:80"
-    configs:
-      - source: nginx_config
-        target: /etc/nginx/nginx.conf
     links:
       - server
     command: |
@@ -60,30 +59,3 @@ services:
       "
     volumes:
       - ./public:/usr/share/nginx/html
-
-configs:
-  nginx_config:
-    content: |
-      events {
-        worker_connections 1024;
-      }
-      http {
-        limit_req_zone $$binary_remote_addr zone=rtlmtr:10m rate=10r/s;
-        upstream backend {
-          server server:8080;
-        }
-        server {
-          listen 80;
-          root /usr/share/nginx/html;
-          auth_basic "Auth required";
-          auth_basic_user_file /etc/nginx/.htpasswd;
-          limit_req zone=rtlmtr burst=20 nodelay;
-          location / {
-            index index.html
-            try_files $$uri $$uri/ =404;
-          }
-          location /api {
-            proxy_pass http://backend;
-          }
-        }
-      }

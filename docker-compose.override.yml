@@ -19,5 +19,7 @@ services:
     command: nimble test
 
   proxy:
+    build:
+      context: proxy/
     ports:
       - "9000:80"
