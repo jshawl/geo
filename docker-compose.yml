@@ -1,5 +1,5 @@
 x-common: &common-config
-  image: ghcr.io/jshawl/nim-deployment:main
+  image: ghcr.io/jshawl/nim-deployment-server:main
   env_file: .env
   volumes:
     - ./db:/app/db

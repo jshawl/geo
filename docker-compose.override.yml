@@ -1,9 +1,9 @@
 x-common: &common-config
   build:
-    context: .
+    context: server/
     target: builder
   volumes:
-    - ./:/app/
+    - ./server:/app
 
 services:
   worker:
