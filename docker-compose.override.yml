@@ -21,9 +21,15 @@ services:
   frontend:
     build:
       context: frontend/
+      target: builder
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
 
   proxy:
     build:
       context: proxy/
     ports:
       - "9000:80"
+    volumes:
+      - ./proxy/nginx.dev.conf:/etc/nginx/nginx.conf
