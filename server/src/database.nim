@@ -53,10 +53,14 @@ proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Even
       lon: parseFloat(row[2]),
     )
 
-proc findYears*(db: DbConn): Table[string, string] =
+type YearlyCount = object
+  year: int
+  count: int
+
+proc findYears*(db: DbConn): seq[YearlyCount] =
   let q = sql"SELECT strftime('%Y', created_at) as year, COUNT(*) as count from events group by year"
   for row in db.rows(q):
-    result[row[0]] = row[1]
+    result.add YearlyCount(year: parseInt(row[0]), count: parseInt(row[1]))
 
 proc `%`*(dt: DateTime): JsonNode =
   result = % $dt
