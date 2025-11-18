@@ -46,14 +46,14 @@ proc fetchData*(db: DbConn, f: DataFetcher): JsonNode =
     discard f.httpGet(os.getEnv("HEALTHCHECK_URL"))
 
 when isMainModule:
-  let yesterday = now() - 1.days
-  let dateFrom = yesterday.format("yyyy-MM-dd")
-  let tomorrow = now() + 1.days
-  let dateTo = tomorrow.format("yyyy-MM-dd")
-  let baseUrl: string = os.getEnv("BASE_URL") & "&from=" & dateFrom & "&to=" & dateTo
-  let fetcher: DataFetcher = newDataFetcher(realHttpGet, baseUrl)
   let oneHourInMilliseconds = 1000 * 60 * 60
   while running:
+    let yesterday = now() - 1.days
+    let dateFrom = yesterday.format("yyyy-MM-dd")
+    let tomorrow = now() + 1.days
+    let dateTo = tomorrow.format("yyyy-MM-dd")
+    let baseUrl: string = os.getEnv("BASE_URL") & "&from=" & dateFrom & "&to=" & dateTo
+    let fetcher: DataFetcher = newDataFetcher(realHttpGet, baseUrl)
     let db = setupDb("db/")
     discard fetchData(db, fetcher)
     db.closeConnection()
