@@ -10,11 +10,19 @@ proc handleSignal() {.noconv.} =
 
 setControlCHook(handleSignal)
 
+proc handleGetYears (req: Request, db: DbConn) {.async.} =
+  let headers = {"Content-type": "application/json; charset=utf-8"}
+  let years = db.findYears()
+  let jsonObj = %* years
+  await req.respond(Http200, jsonObj.pretty(), headers.newHttpHeaders())
+
 proc main {.async.} =
   var server = newAsyncHttpServer()
   let db = setupDb("db/")
   proc cb(req: Request) {.async.} =
     echo (req.reqMethod, req.url, req.headers)
+    if req.url.path == "/api/years":
+      await handleGetYears(req, db)
     var queryParams = initTable[string, string]()
     for key, value in decodeQuery(req.url.query):
       echo "value:" & value

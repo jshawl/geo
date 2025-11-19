@@ -1,5 +1,5 @@
 import db_connector/db_sqlite
-import std / [times, strutils, json]
+import std / [times, strutils, json, tables]
 import ./geohash
 
 export DbConn 
@@ -52,6 +52,15 @@ proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Even
       lat: parseFloat(row[1]),
       lon: parseFloat(row[2]),
     )
+
+type YearlyCount = object
+  year: int
+  count: int
+
+proc findYears*(db: DbConn): seq[YearlyCount] =
+  let q = sql"SELECT strftime('%Y', created_at) as year, COUNT(*) as count from events group by year"
+  for row in db.rows(q):
+    result.add YearlyCount(year: parseInt(row[0]), count: parseInt(row[1]))
 
 proc `%`*(dt: DateTime): JsonNode =
   result = % $dt
