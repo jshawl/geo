@@ -62,6 +62,24 @@ proc findYears*(db: DbConn): seq[YearlyCount] =
   for row in db.rows(q):
     result.add YearlyCount(year: parseInt(row[0]), count: parseInt(row[1]))
 
+type MonthlyCount = object
+  month: string
+  count: int
+
+proc findMonths*(db: DbConn, year: string): seq[MonthlyCount] =
+  let q = sql"SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as count from events where created_at LIKE ? group by month"
+  for row in db.rows(q, year & "%"):
+    result.add MonthlyCount(month: row[0], count: parseInt(row[1]))
+
+type DailyCount = object
+  day: string
+  count: int
+
+proc findDays*(db: DbConn, year: string, month: string): seq[DailyCount] =
+  let q = sql"SELECT strftime('%Y-%m-%d', created_at) as day, COUNT(*) as count from events where created_at LIKE ? group by day"
+  for row in db.rows(q, year & "-" & month & "%"):
+    result.add DailyCount(day: row[0], count: parseInt(row[1]))
+
 proc `%`*(dt: DateTime): JsonNode =
   result = % $dt
 
