@@ -1,5 +1,5 @@
 import db_connector/db_sqlite
-import std / [times, strutils, json, tables]
+import std / [times, strutils, json]
 import ./geohash
 
 export DbConn 

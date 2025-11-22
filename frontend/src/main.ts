@@ -1,13 +1,12 @@
 import "./style.css";
+import * as map from "./map";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div>
     <div class='view'></div>
-    <pre></pre>
   </div>
 `;
 const view = document.querySelector(".view")!;
-const pre = document.querySelector("pre")!;
 addEventListener("load", main);
 addEventListener("hashchange", main);
 
@@ -22,7 +21,7 @@ const breadcrumbs = (strings: string[]) =>
 
 function main() {
   view.innerHTML = "";
-  pre.innerHTML = "";
+  map.destroy();
   const dateParam = location.hash.slice(2);
   const [_, year, month, day] = Array.from(
     dateParam.match(/(\d{4})-?(\d{2})?-?(\d{2})?/) ?? ""
@@ -42,9 +41,12 @@ function main() {
     const url = `/api?from=${from}&to=${to}`;
     fetch(url).then(async (response) => {
       const data = await response.json();
-      pre.innerHTML = JSON.stringify(data, null, 2);
+      if (data.length > 0) {
+        map.render(data);
+      } else {
+        view.innerHTML += "No events found.";
+      }
     });
-    console.log({ url });
     return;
   }
 
