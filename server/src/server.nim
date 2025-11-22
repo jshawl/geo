@@ -1,4 +1,4 @@
-import std / [asyncdispatch, asynchttpserver, json, uri, tables]
+import std / [asyncdispatch, asynchttpserver, json, uri, tables, strutils]
 import ./database
 import ./logger
 
@@ -28,6 +28,12 @@ proc handleGetDays (req: Request, db: DbConn, year: string, month: string) {.asy
   let jsonObj = %* days
   await req.respond(Http200, jsonObj.pretty(), headers.newHttpHeaders())
 
+proc handleGetGeoHashes (req: Request, db: DbConn, north, east, south, west: float, precision: int) {.async.} =
+  let headers = {"Content-type": "application/json; charset=utf-8"}
+  let hashes = db.findGeoHashes(north, east, south, west, precision)
+  let jsonObj = %* hashes
+  await req.respond(Http200, jsonObj.pretty(), headers.newHttpHeaders())
+
 proc main {.async.} =
   var server = newAsyncHttpServer()
   let db = setupDb("db/")
@@ -38,6 +44,13 @@ proc main {.async.} =
     for key, value in decodeQuery(req.url.query):
       queryParams[key] = value
     var jsonObj = %* []
+    if req.url.path == "/api/geohashes":
+      let north = parseFloat(queryParams["north"])
+      let east = parseFloat(queryParams["east"])
+      let south = parseFloat(queryParams["south"])
+      let west = parseFloat(queryParams["west"])
+      let precision = parseInt(queryParams["precision"])
+      await handleGetGeoHashes(req, db, north, east, south, west, precision)
     if req.url.path == "/api/months" and queryParams.hasKey("year"):
       await handleGetMonths(req, db, queryParams["year"])
     if req.url.path == "/api/days" and queryParams.hasKey("year") and queryParams.hasKey("month"):

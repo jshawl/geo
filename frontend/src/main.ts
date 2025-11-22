@@ -85,17 +85,24 @@ function main() {
   }
 
   const url = `/api/years`;
-  // map.render([
-  //   { lat: 35, lon: -96 },
-  //   { lat: 36, lon: -97 },
-  // ]);
+  map.render([
+    { lat: 35, lon: -96 },
+    { lat: 36, lon: -97 },
+  ]);
 
-  // map.addEventListener("move", (e) => {
-  //   const { north, east, south, west } = map.getBounds();
-  //   console.log("zoom:", map.getZoom());
-  //   console.log("precision", map.getPrecision());
-  //   console.log({ north, east, south, west });
-  // });
+  map.addEventListener("move", (e) => {
+    debounce(async () => {
+      const { north, east, south, west } = map.getBounds();
+      console.log("zoom:", map.getZoom());
+      console.log("precision", map.getPrecision());
+      console.log({ north, east, south, west });
+      const precision = map.getPrecision();
+      const url = `/api/geohashes?north=${north}&south=${south}&east=${east}&west=${west}&precision=${precision}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log(data);
+    });
+  });
   view.innerHTML = breadcrumbs([]);
   fetch(url).then(async (response) => {
     const data = (await response.json()) as Count<"year">[];
@@ -108,4 +115,10 @@ function main() {
         .join("")}
     </ul>`;
   });
+}
+
+let debounceTimeout: number;
+function debounce(fn: Function) {
+  clearTimeout(debounceTimeout);
+  debounceTimeout = setTimeout(fn, 500);
 }

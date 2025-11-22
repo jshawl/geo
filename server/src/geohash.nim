@@ -40,29 +40,43 @@ proc encode*(lat, lon: float, precision = 12): string =
       idx = 0
 
 # https://github.com/davetroy/geohash-js/blob/master/geohash.js
-var NEIGHBORS = {
-  "right": {"even": "bc01fg45238967deuvhjyznpkmstqrwx"}.toTable,
-  "left": {"even": "238967debc01fg45kmstqrwxuvhjyznp"}.toTable,
-  "top": {"even": "p0r21436x8zb9dcf5h7kjnmqesgutwvy"}.toTable,
-  "bottom": {"even": "14365h7k9dcfesgujnmqp0r2twvyx8zb"}.toTable
+const NEIGHBORS = {
+  "right": {
+    "even": "bc01fg45238967deuvhjyznpkmstqrwx",
+    "odd": "p0r21436x8zb9dcf5h7kjnmqesgutwvy"
+  }.toTable,
+  "left": {
+    "even": "238967debc01fg45kmstqrwxuvhjyznp",
+    "odd": "14365h7k9dcfesgujnmqp0r2twvyx8zb"
+  }.toTable,
+  "top": {
+    "even": "p0r21436x8zb9dcf5h7kjnmqesgutwvy",
+    "odd": "bc01fg45238967deuvhjyznpkmstqrwx"
+  }.toTable,
+  "bottom": {
+    "even": "14365h7k9dcfesgujnmqp0r2twvyx8zb",
+    "odd": "238967debc01fg45kmstqrwxuvhjyznp"
+  }.toTable
 }.toTable
 
-var BORDERS = {
-  "right": { "even" : "bcfguvyz" }.toTable,
-  "left": { "even" : "0145hjnp" }.toTable,
-  "top": { "even" : "prxz" }.toTable,
-  "bottom": { "even" : "028b" }.toTable
+const BORDERS = {
+  "right": {
+    "even" : "bcfguvyz",
+    "odd": "prxz"
+  }.toTable,
+  "left": {
+    "even" : "0145hjnp",
+    "odd": "028b"
+  }.toTable,
+  "top": {
+    "even" : "prxz",
+    "odd": "bcfguvyz"
+  }.toTable,
+  "bottom": {
+    "even" : "028b",
+    "odd": "0145hjnp"
+  }.toTable
 }.toTable;
-
-NEIGHBORS["bottom"]["odd"] = NEIGHBORS["left"]["even"];
-NEIGHBORS["top"]["odd"] = NEIGHBORS["right"]["even"];
-NEIGHBORS["left"]["odd"] = NEIGHBORS["bottom"]["even"];
-NEIGHBORS["right"]["odd"] = NEIGHBORS["top"]["even"];
-
-BORDERS["bottom"]["odd"] = BORDERS["left"]["even"];
-BORDERS["top"]["odd"] = BORDERS["right"]["even"];
-BORDERS["left"]["odd"] = BORDERS["bottom"]["even"];
-BORDERS["right"]["odd"] = BORDERS["top"]["even"];
 
 proc neighbor*(hash: string, direction: string): string =
   let lastChr = hash[^1]

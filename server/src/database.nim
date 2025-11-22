@@ -1,5 +1,5 @@
 import db_connector/db_sqlite
-import std / [times, strutils, json]
+import std / [times, strutils, json, strformat]
 import ./geohash
 
 export DbConn 
@@ -79,6 +79,18 @@ proc findDays*(db: DbConn, year: string, month: string): seq[DailyCount] =
   let q = sql"SELECT strftime('%Y-%m-%d', created_at) as day, COUNT(*) as count from events where created_at LIKE ? group by day"
   for row in db.rows(q, year & "-" & month & "%"):
     result.add DailyCount(day: row[0], count: parseInt(row[1]))
+
+proc findGeoHashes*(db: DbConn, north, east, south, west: float, precision: int): seq[string] =
+  let hashes = sections(north, east, south, west, precision)
+  let placeholders = repeat("?", hashes.len).join(",")
+  let raw = fmt"""
+    SELECT distinct substr(geohash,1,?) FROM events WHERE substr(geohash,1,?) IN ({placeholders});
+  """
+  let q = sql raw
+  let params = @[$precision, $precision] & hashes
+  let rows = db.getAllRows(q, params)
+  for row in rows:
+    result.add row
 
 proc `%`*(dt: DateTime): JsonNode =
   result = % $dt
