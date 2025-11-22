@@ -85,6 +85,17 @@ function main() {
   }
 
   const url = `/api/years`;
+  // map.render([
+  //   { lat: 35, lon: -96 },
+  //   { lat: 36, lon: -97 },
+  // ]);
+
+  // map.addEventListener("move", (e) => {
+  //   const { north, east, south, west } = map.getBounds();
+  //   console.log("zoom:", map.getZoom());
+  //   console.log("precision", map.getPrecision());
+  //   console.log({ north, east, south, west });
+  // });
   view.innerHTML = breadcrumbs([]);
   fetch(url).then(async (response) => {
     const data = (await response.json()) as Count<"year">[];
