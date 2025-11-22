@@ -11,8 +11,10 @@ services:
     <<: *common-config
 
   server:
-    command: nimble run server
+    command: sh -c "find . -name '*.nim' | entr -rn nimble run server"
     <<: *common-config
+    ports:
+      - "8080:8080"
 
   test:
     <<: *common-config

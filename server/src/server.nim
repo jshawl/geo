@@ -32,12 +32,10 @@ proc main {.async.} =
   var server = newAsyncHttpServer()
   let db = setupDb("db/")
   proc cb(req: Request) {.async.} =
-    echo (req.reqMethod, req.url, req.headers)
     if req.url.path == "/api/years":
       await handleGetYears(req, db)
     var queryParams = initTable[string, string]()
     for key, value in decodeQuery(req.url.query):
-      echo "value:" & value
       queryParams[key] = value
     var jsonObj = %* []
     if req.url.path == "/api/months" and queryParams.hasKey("year"):

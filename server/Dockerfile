@@ -1,5 +1,5 @@
 FROM nimlang/nim:2.2.6-alpine-regular AS builder
-RUN apk add --no-cache sqlite-static openssl-libs-static
+RUN apk add --no-cache sqlite-static openssl-libs-static entr
 WORKDIR /app
 COPY . .
 RUN git config --global --add safe.directory /app
