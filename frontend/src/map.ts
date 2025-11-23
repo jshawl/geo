@@ -1,4 +1,5 @@
 import "./map.css";
+import Geohash from "latlon-geohash";
 
 declare global {
   interface Window {
@@ -8,6 +9,7 @@ declare global {
       tileLayer: (...args: unknown[]) => Addable;
       Polyline: Polyline;
       LatLng: LatLng;
+      rectangle: (bounds: unknown, options: unknown) => Addable;
     };
   }
 }
@@ -37,6 +39,8 @@ type Map = {
   };
   getZoom: () => number;
   on: (event: string, callback: any) => void;
+  _layers: Record<string, { _path: unknown }>;
+  removeLayer: (layer: unknown) => void;
 };
 
 let map: Map | undefined;
@@ -53,25 +57,35 @@ export const render = (events: Event[]) => {
         "pk.eyJ1IjoiYW1ibGVhcHAiLCJhIjoiY2s1MXFlc2tmMDBudTNtcDhwYTNlMXF6NCJ9.5sCbcBl56vskuJ2o_e27uQ",
     }
   ).addTo(map);
-  map.setView([0, 0], 10);
-  const pointList = events.map(
-    (event) => new window.L.LatLng(event.lat, event.lon)
-  );
-  const polyline = new window.L.Polyline(pointList, {
-    color: "blue",
-    weight: 5,
-    opacity: 0.5,
-    smoothFactor: 5,
-  });
+  map.setView([40, -95], 4);
+  if (events.length) {
+    const pointList = events.map(
+      (event) => new window.L.LatLng(event.lat, event.lon)
+    );
+    const polyline = new window.L.Polyline(pointList, {
+      color: "blue",
+      weight: 5,
+      opacity: 0.5,
+      smoothFactor: 5,
+    });
 
-  polyline.addTo(map);
-  map.fitBounds([polyline._bounds._northEast, polyline._bounds._southWest]);
+    polyline.addTo(map);
+    map.fitBounds([polyline._bounds._northEast, polyline._bounds._southWest]);
+  }
 };
 
 export const destroy = () => {
   if (map) {
     map.remove();
     map = undefined;
+  }
+};
+
+export const clear = () => {
+  for (let i in map?._layers) {
+    if (map._layers[i]._path != undefined) {
+      map.removeLayer(map._layers[i]);
+    }
   }
 };
 
@@ -103,12 +117,12 @@ export const getPrecision = () => {
     case 6:
       return 3;
     case 7:
-    case 8:
       return 4;
+    case 8:
     case 9:
     case 10:
-    case 11:
       return 5;
+    case 11:
     case 12:
     case 13:
       return 6;
@@ -120,4 +134,32 @@ export const getPrecision = () => {
     case 18:
       return 8;
   }
+};
+
+export const addRectangle = (bounds: number[][]) => {
+  window.L.rectangle(bounds, {
+    color: "#000",
+    weight: 0,
+    fillOpacity: 0.8,
+  }).addTo(map!);
+};
+
+let fetchedHashes = [];
+export const addGeoHashes = async () => {
+  const { north, east, south, west } = getBounds();
+  const precision = getPrecision();
+  const url = `/api/geohashes?north=${north}&south=${south}&east=${east}&west=${west}&precision=${precision}`;
+  const response = await fetch(url);
+  const hashes: string[] = await response.json();
+  if (fetchedHashes.length != hashes.length) {
+    clear();
+    fetchedHashes = hashes;
+  }
+  hashes.forEach((hash) => {
+    const { ne, sw } = Geohash.bounds(hash);
+    addRectangle([
+      [ne.lat, ne.lon],
+      [sw.lat, sw.lon],
+    ]);
+  });
 };

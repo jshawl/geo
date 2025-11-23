@@ -85,22 +85,12 @@ function main() {
   }
 
   const url = `/api/years`;
-  map.render([
-    { lat: 35, lon: -96 },
-    { lat: 36, lon: -97 },
-  ]);
+  map.render([]);
+  map.addGeoHashes();
 
   map.addEventListener("move", () => {
     debounce(async () => {
-      const { north, east, south, west } = map.getBounds();
-      console.log("zoom:", map.getZoom());
-      console.log("precision", map.getPrecision());
-      console.log({ north, east, south, west });
-      const precision = map.getPrecision();
-      const url = `/api/geohashes?north=${north}&south=${south}&east=${east}&west=${west}&precision=${precision}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      console.log(data);
+      map.addGeoHashes();
     });
   });
   view.innerHTML = breadcrumbs([]);
@@ -110,7 +100,7 @@ function main() {
       ${data
         .map(
           ({ year, count }) =>
-            `<li><a href='/#/${year}'>${year}</a> - ${count}</li>`
+            `<li><a href='/#/${year}'>${year}</a> - ${count.toLocaleString()}</li>`
         )
         .join("")}
     </ul>`;
