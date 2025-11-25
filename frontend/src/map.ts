@@ -38,6 +38,7 @@ type Map = {
     _southWest: { lat: number; lng: number };
   };
   getZoom: () => number;
+  getCenter: () => Event;
   on: (event: string, callback: any) => void;
   _layers: Record<string, { _path: unknown }>;
   removeLayer: (layer: unknown) => void;
@@ -103,6 +104,9 @@ export const getBounds = () => {
 };
 
 export const getZoom = () => map!.getZoom();
+export const getCenter = () => map!.getCenter();
+export const setView = (coords: number[], zoom: number) =>
+  map?.setView(coords, zoom);
 
 export const getPrecision = () => {
   switch (map!.getZoom()) {
@@ -124,12 +128,12 @@ export const getPrecision = () => {
       return 5;
     case 11:
     case 12:
-    case 13:
       return 6;
+    case 13:
     case 14:
+      return 7;
     case 15:
     case 16:
-      return 7;
     case 17:
     case 18:
       return 8;

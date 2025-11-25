@@ -24,7 +24,7 @@ function main() {
   map.destroy();
   const dateParam = location.hash.slice(2);
   const [_, year, month, day] = Array.from(
-    dateParam.match(/(\d{4})-?(\d{2})?-?(\d{2})?/) ?? ""
+    dateParam.match(/^(\d{4})-?(\d{2})?-?(\d{2})?/) ?? ""
   );
 
   type Count<T extends "year" | "month" | "day"> = { [K in T]: string } & {
@@ -84,16 +84,17 @@ function main() {
     return;
   }
 
-  const url = `/api/years`;
   map.render([]);
+  updateMapFromUrl();
   map.addGeoHashes();
-
   map.addEventListener("move", () => {
     debounce(async () => {
+      updateUrlFromMap();
       map.addGeoHashes();
     });
   });
   view.innerHTML = breadcrumbs([]);
+  const url = `/api/years`;
   fetch(url).then(async (response) => {
     const data = (await response.json()) as Count<"year">[];
     view.innerHTML += `<ul>
@@ -111,4 +112,28 @@ let debounceTimeout: number;
 function debounce(fn: Function) {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(fn, 500);
+}
+
+function updateUrlFromMap() {
+  const values: Record<string, number> = {
+    ...map.getCenter(),
+    zoom: map.getZoom(),
+  };
+  const params = new URLSearchParams();
+  for (let key in values) {
+    params.append(key, `${values[key]}`);
+  }
+  window.history.pushState(null, "", "#/?" + params.toString());
+}
+
+function updateMapFromUrl() {
+  const hasParams = /lat=/.test(location.hash);
+  if (!hasParams) {
+    return;
+  }
+  const params = new URLSearchParams(window.location.hash.slice(2));
+  const [lat, lon, zoom] = ["lat", "lng", "zoom"].map((key) =>
+    parseFloat(params.get(key) ?? "")
+  );
+  map.setView([lat, lon], zoom);
 }
