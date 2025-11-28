@@ -23,26 +23,9 @@ services:
     command: /app/build/server
 
   backups:
-    <<: [*common-config, *logging-config]
-    command: /app/build/backup
-
-  backup-uploader:
-    image: amazon/aws-cli
+    image: ghcr.io/jshawl/nim-deployment-backups:main
+    pull_policy: always
     env_file: .env
-    entrypoint: /bin/sh
-    command:
-      - -c
-      - |
-        while true; do
-          sleep 11800
-          echo "[$(date -u +"%FT%T")] syncing to s3..."
-          aws s3 sync /app/db/ s3://$AWS_BUCKET_NAME/backups/ \
-            --exclude "*" \
-            --include "backup-*.db" \
-            --endpoint-url $AWS_ENDPOINT_URL
-          echo "[$(date -u +"%FT%T")] sync to s3 completed."
-          sleep 74600
-        done
     volumes:
       - ./db:/app/db
 
