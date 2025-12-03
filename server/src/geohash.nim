@@ -91,7 +91,6 @@ proc sections*(north, east, south, west: float, precision: int): seq[string] =
   let topRight = encode(north, east, precision)
   let bottomLeft = encode(south, west, precision)
   let bottomRight = encode(south, east, precision)
-  # test server build
   result.add(topLeft)
   while not result.contains(topRight):
     result.add(neighbor(result[^1], "right"))
