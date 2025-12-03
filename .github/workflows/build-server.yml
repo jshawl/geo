@@ -16,7 +16,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: ./.github/workflows/shared.yml
+    uses: ./.github/workflows/base.yml
     with:
       service: server
       context: server/
