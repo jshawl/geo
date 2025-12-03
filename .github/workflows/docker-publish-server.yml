@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/docker-build-reusable.yml
+    uses: ./.github/workflows/docker-publish-reusable.yml
     with:
       service: server
       context: server/
