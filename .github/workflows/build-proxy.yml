@@ -20,3 +20,4 @@ jobs:
     with:
       service: proxy
       context: proxy/
+      test-command: "docker compose run proxy nginx -t"
