@@ -12,3 +12,5 @@ while true; do
     rm -rf db/backups/
     sleep 74600
 done
+
+# backup

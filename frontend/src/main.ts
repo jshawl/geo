@@ -113,7 +113,7 @@ function debounce(fn: Function) {
   clearTimeout(debounceTimeout);
   debounceTimeout = setTimeout(fn, 500);
 }
-
+// frontend
 function updateUrlFromMap() {
   const values: Record<string, number> = {
     ...map.getCenter(),
