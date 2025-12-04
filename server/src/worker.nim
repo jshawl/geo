@@ -13,13 +13,12 @@ setControlCHook(handleSignal)
 
 const embeddedCaCerts = staticRead("/etc/ssl/certs/ca-certificates.crt")
 let certFile = getTempDir() / "ca-certificates.crt"
+if not fileExists(certFile):
+  writeFile(certFile, embeddedCaCerts)
+let sslContext = newContext(verifyMode=CVerifyPeer, caFile=certFile)
 
 proc initHttpClient(): HttpClient =
-  if not fileExists(certFile):
-    writeFile(certFile, embeddedCaCerts)
-  newHttpClient(sslContext=newContext(verifyMode=CVerifyPeer, caFile=certFile))
-
-let globalHttpClient = initHttpClient()
+  newHttpClient(sslContext=sslContext)
 
 type
   HttpGetProc* = proc(url: string): string {.closure.}
@@ -31,7 +30,9 @@ proc newDataFetcher*(httpGet: HttpGetProc): DataFetcher =
   DataFetcher(httpGet: httpGet)
 
 proc realHttpGet*(url: string): string =
-  globalHttpClient.getContent(url)
+  let client = initHttpClient()
+  defer: client.close()
+  return client.getContent(url)
 
 proc fetchData*(db: DbConn, f: DataFetcher, url: string): JsonNode =
   result = parseJson(f.httpGet(url))
@@ -54,15 +55,15 @@ proc fetchData*(db: DbConn, f: DataFetcher, url: string): JsonNode =
 when isMainModule:
   let oneHourInMilliseconds = 1000 * 60 * 60
   let fetcher: DataFetcher = newDataFetcher(realHttpGet)
+  discard setupDb("db/")
   while running:
     let yesterday = now() - 1.days
     let dateFrom = yesterday.format("yyyy-MM-dd")
     let tomorrow = now() + 1.days
     let dateTo = tomorrow.format("yyyy-MM-dd")
     let baseUrl: string = os.getEnv("BASE_URL") & "&from=" & dateFrom & "&to=" & dateTo
-    let db = setupDb("db/")
+    let db = openDb("db/")
     discard fetchData(db, fetcher, baseUrl)
     db.closeConnection()
     sleep(oneHourInMilliseconds)
-  globalHttpClient.close() 
   info("byeeee")

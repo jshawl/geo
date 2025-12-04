@@ -9,8 +9,11 @@ type
     created_at*: DateTime
     lat*, lon*: float
 
+proc openDb*(dir: string): DbConn =
+  open(dir & "app.db", "", "", "")
+
 proc setupDb*(dir: string): DbConn =
-  let db = open(dir & "app.db", "", "", "")
+  let db = openDb(dir)
   db.exec(sql"""
     CREATE TABLE IF NOT EXISTS events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
