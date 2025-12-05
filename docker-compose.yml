@@ -1,5 +1,5 @@
 x-common: &common-config
-  image: ghcr.io/jshawl/nim-deployment-server:main
+  image: ghcr.io/jshawl/geo-server:main
   env_file: .env
   volumes:
     - ./db:/app/db
@@ -23,14 +23,14 @@ services:
     command: /app/build/server
 
   backups:
-    image: ghcr.io/jshawl/nim-deployment-backups:main
+    image: ghcr.io/jshawl/geo-backups:main
     pull_policy: always
     env_file: .env
     volumes:
       - ./db:/app/db
 
   frontend:
-    image: ghcr.io/jshawl/nim-deployment-frontend:main
+    image: ghcr.io/jshawl/geo-frontend:main
     pull_policy: always
     command: sh -c "cp -r /app/* /target/"
     volumes:
@@ -38,7 +38,7 @@ services:
 
   proxy:
     <<: *logging-config
-    image: ghcr.io/jshawl/nim-deployment-proxy:main
+    image: ghcr.io/jshawl/geo-proxy:main
     env_file: .env
     pull_policy: always
     ports:

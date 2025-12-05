@@ -4,6 +4,6 @@
 echo "BASE_URL=" > .env
 echo "HEALTHCHECK_URL=" >> .env
 mkdir -p db
-wget https://raw.githubusercontent.com/jshawl/nim-deployment/refs/heads/main/docker-compose.yml
+wget https://raw.githubusercontent.com/jshawl/geo/refs/heads/main/docker-compose.yml
 docker compose up -d
 ```

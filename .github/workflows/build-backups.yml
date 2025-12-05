@@ -3,8 +3,8 @@ name: Docker (backups)
 on:
   push:
     branches: ["main"]
-    paths:
-      - backups/**
+    # paths:
+    #   - backups/**
   pull_request:
     branches: ["main"]
     paths:
