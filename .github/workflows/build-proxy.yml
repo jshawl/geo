@@ -3,8 +3,8 @@ name: Docker (proxy)
 on:
   push:
     branches: ["main"]
-    paths:
-      - proxy/**
+    # paths:
+    #   - proxy/**
   pull_request:
     branches: ["main"]
     paths:
