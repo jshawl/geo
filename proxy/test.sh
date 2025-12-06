@@ -5,6 +5,8 @@ set -e
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 IMAGE=$(sed -n 's/^FROM \([^ ]*\).*/\1/p' "$SCRIPT_DIR/Dockerfile")
 
+docker pull $IMAGE
+
 test_conf() {
     echo "🧪 testing $SCRIPT_DIR/$1"
     docker run --rm \
