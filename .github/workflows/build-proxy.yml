@@ -20,3 +20,4 @@ jobs:
     with:
       service: proxy
       context: proxy/
+      test-command: "./proxy/test.sh"
