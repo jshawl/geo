@@ -167,3 +167,27 @@ export const addGeoHashes = async () => {
     ]);
   });
 };
+
+export const updateUrlFromMap = () => {
+  const values: Record<string, number> = {
+    ...getCenter(),
+    zoom: getZoom(),
+  };
+  const params = new URLSearchParams();
+  for (let key in values) {
+    params.append(key, `${values[key]}`);
+  }
+  window.history.pushState(null, "", "#/?" + params.toString());
+};
+
+export const updateMapFromUrl = () => {
+  const hasParams = /lat=/.test(location.hash);
+  if (!hasParams) {
+    return;
+  }
+  const params = new URLSearchParams(window.location.hash.slice(2));
+  const [lat, lon, zoom] = ["lat", "lng", "zoom"].map((key) =>
+    parseFloat(params.get(key) ?? "")
+  );
+  setView([lat, lon], zoom);
+};
