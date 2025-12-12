@@ -19,7 +19,7 @@ export const render = (events: Event[]) => {
       id: "mapbox/streets-v11",
       accessToken:
         "pk.eyJ1IjoiYW1ibGVhcHAiLCJhIjoiY2s1MXFlc2tmMDBudTNtcDhwYTNlMXF6NCJ9.5sCbcBl56vskuJ2o_e27uQ",
-    } as L.TileLayerOptions
+    } as boolean //as L.TileLayerOptions
   ).addTo(map);
   map.setView([40, -95], 4);
   if (events.length) {

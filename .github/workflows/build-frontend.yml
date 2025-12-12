@@ -20,3 +20,4 @@ jobs:
     with:
       service: frontend
       context: frontend/
+      test-command: "npm run typecheck"
