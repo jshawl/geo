@@ -110,9 +110,6 @@ const renderEvents = ({ view, geohash }: ViewProps<"geohash">) => {
     const data = await response.json();
     if (data.length > 0) {
       map.render(data, { polyline: false });
-      // view.innerHTML += `<ul>${data
-      //   .map((d) => `<li>${d.created_at}</li>`)
-      //   .join("")}</ul>`;
     } else {
       view.innerHTML += "No events found.";
     }
@@ -125,7 +122,7 @@ export const render = ({
   month,
   day,
   geohash,
-}: ViewProps<never>) => {
+}: ViewProps<"year" | "month" | "day" | "geohash">) => {
   if (year && month && day) {
     return renderDay({ view, year, month, day });
   }
