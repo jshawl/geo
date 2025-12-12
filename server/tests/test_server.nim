@@ -48,6 +48,7 @@ suite "server":
         let data = %*[{
            "created_at": "2000-01-01T05:00:00+00:00",
            "lat": 1.23456,
-           "lon": 4.56789
+           "lon": 4.56789,
+           "geohash": "s05ppbwpzd9t"
         }]
         check body == data

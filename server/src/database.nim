@@ -55,6 +55,7 @@ proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Even
       created_at: parse(row[0], "yyyy-MM-dd'T'HH':'mm':'ss'.'fff'Z'"),
       lat: parseFloat(row[1]),
       lon: parseFloat(row[2]),
+      geohash: row[3]
     )
 
 proc findMultipleEvents*(db: DbConn, geohash: string): seq[Event] =

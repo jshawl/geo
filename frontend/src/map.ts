@@ -120,8 +120,9 @@ export const getPrecision = () => {
 export const addRectangle = (bounds: LeafletTypes.LatLngBoundsExpression) => {
   return window.L.rectangle(bounds, {
     color: "#000",
-    weight: 0,
-    fillOpacity: 0.8,
+    weight: 1,
+    fillOpacity: 0.3,
+    stroke: true,
   }).addTo(map!);
 };
 
