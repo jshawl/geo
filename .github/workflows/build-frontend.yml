@@ -20,4 +20,4 @@ jobs:
     with:
       service: frontend
       context: frontend/
-      test-command: "cd frontend && npm run typecheck"
+      test-command: "cd frontend && npm install && npm run typecheck"
