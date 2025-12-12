@@ -3,13 +3,15 @@ import Geohash from "latlon-geohash";
 import type * as LeafletTypes from "leaflet";
 
 type Event = {
+  created_at?: string;
+  geohash?: string;
   lat: number;
   lon: number;
 };
 
 let map: LeafletTypes.Map | undefined;
 
-export const render = (events: Event[]) => {
+export const render = (events: Event[], options?: { polyline: boolean }) => {
   map ??= window.L.map("map");
   window.L.tileLayer(
     "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
@@ -23,6 +25,17 @@ export const render = (events: Event[]) => {
   ).addTo(map);
   map.setView([40, -95], 4);
   if (events.length) {
+    if (options?.polyline === false) {
+      const markers = window.L.featureGroup().addTo(map);
+      events.map((event) => {
+        const ts = event.created_at?.slice(0, 10);
+        window.L.marker([event.lat, event.lon])
+          .addTo(markers)
+          .bindPopup(`<a href='/#/${ts}'>${ts}</a> - ${event.geohash}`);
+      });
+      map.fitBounds(markers.getBounds());
+      return;
+    }
     const pointList = events.map(
       (event) => new window.L.LatLng(event.lat, event.lon)
     );
@@ -107,8 +120,9 @@ export const getPrecision = () => {
 export const addRectangle = (bounds: LeafletTypes.LatLngBoundsExpression) => {
   return window.L.rectangle(bounds, {
     color: "#000",
-    weight: 0,
-    fillOpacity: 0.8,
+    weight: 1,
+    fillOpacity: 0.3,
+    stroke: true,
   }).addTo(map!);
 };
 
@@ -125,10 +139,11 @@ export const addGeoHashes = async () => {
   }
   hashes.forEach((hash) => {
     const { ne, sw } = Geohash.bounds(hash);
-    addRectangle([
+    const rect = addRectangle([
       [ne.lat, ne.lon],
       [sw.lat, sw.lon],
     ]);
+    rect.bindPopup(`<a href="/#/${hash}">${hash}</a>`);
   });
 };
 

@@ -10,6 +10,7 @@ type ViewProps<T extends string> = {
   year?: string;
   month?: string;
   day?: string;
+  geohash?: string;
 } & { [K in T]: string };
 
 const breadcrumbs = (strings: string[]) =>
@@ -101,12 +102,27 @@ const renderYears = ({ view }: ViewProps<never>) => {
   });
 };
 
+const renderEvents = ({ view, geohash }: ViewProps<"geohash">) => {
+  view.innerHTML = breadcrumbs([]);
+
+  const url = `/api?geohash=${geohash}`;
+  fetch(url).then(async (response) => {
+    const data = await response.json();
+    if (data.length > 0) {
+      map.render(data, { polyline: false });
+    } else {
+      view.innerHTML += "No events found.";
+    }
+  });
+};
+
 export const render = ({
   view,
   year,
   month,
   day,
-}: ViewProps<"year" | "month" | "day">) => {
+  geohash,
+}: ViewProps<"year" | "month" | "day" | "geohash">) => {
   if (year && month && day) {
     return renderDay({ view, year, month, day });
   }
@@ -117,6 +133,10 @@ export const render = ({
 
   if (year) {
     return renderYear({ view, year });
+  }
+
+  if (geohash) {
+    return renderEvents({ view, geohash });
   }
 
   return renderYears({ view });

@@ -30,7 +30,10 @@ proc handleRequest*(db: DbConn, path: string, queryParams: Table[string, string]
     let days = db.findDays(queryParams["year"], queryParams["month"])
     return (Http200, %* days)
   of "/api":
-    let events = db.findMultipleEvents(queryParams["from"], queryParams["to"])
+    let events = if queryParams.hasKey("geohash"):
+      db.findMultipleEvents(queryParams["geohash"])
+    else:
+      db.findMultipleEvents(queryParams["from"], queryParams["to"])
     return (Http200, %* events)
   else:
     return (Http404, %* "Not found")

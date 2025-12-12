@@ -8,6 +8,7 @@ type
   Event* = object
     created_at*: DateTime
     lat*, lon*: float
+    geohash: string
 
 proc openDb*(dir: string): DbConn =
   open(dir & "app.db", "", "", "")
@@ -54,6 +55,22 @@ proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Even
       created_at: parse(row[0], "yyyy-MM-dd'T'HH':'mm':'ss'.'fff'Z'"),
       lat: parseFloat(row[1]),
       lon: parseFloat(row[2]),
+      geohash: row[3]
+    )
+
+proc findMultipleEvents*(db: DbConn, geohash: string): seq[Event] =
+  let q = sql"""
+    SELECT created_at, lat, lon, geohash
+    FROM events
+    WHERE geohash LIKE ? LIMIT 1000;
+  """
+
+  for row in db.rows(q, geohash & "%"):
+    result.add Event(
+      created_at: parse(row[0], "yyyy-MM-dd'T'HH':'mm':'ss'.'fff'Z'"),
+      lat: parseFloat(row[1]),
+      lon: parseFloat(row[2]),
+      geohash: row[3],
     )
 
 type YearlyCount = object

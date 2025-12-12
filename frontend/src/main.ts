@@ -16,7 +16,8 @@ const main = () => {
   const [_, year, month, day] = Array.from(
     dateParam.match(/^(\d{4})-?(\d{2})?-?(\d{2})?/) ?? ""
   );
-  return render({ view, year, month, day });
+  const [__, geohash] = Array.from(dateParam.match(/^(\w+)/) ?? "");
+  return render({ view, year, month, day, geohash });
 };
 addEventListener("load", main);
 addEventListener("hashchange", main);
