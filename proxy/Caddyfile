@@ -1,5 +1,20 @@
 localhost:80 {
-	reverse_proxy /api* server:8080
+	route /api/years {
+		cache {
+			ttl 10m
+			stale 24h
+			mode bypass_request
+			otter {
+				size 100
+			}
+		}
+		reverse_proxy server:8080
+	}
+
+	route /api* {
+		reverse_proxy server:8080
+	}
+
 	reverse_proxy frontend:5173
 }
 
