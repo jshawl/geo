@@ -114,6 +114,8 @@ export const getPrecision = () => {
     case 17:
     case 18:
       return 8;
+    default:
+      return 1;
   }
 };
 
