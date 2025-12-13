@@ -37,5 +37,7 @@ services:
       context: proxy/
     ports:
       - "9000:80"
+    environment:
+      AUTO_HTTPS: "off"
     volumes:
       - ./proxy/Caddyfile:/etc/caddy/Caddyfile

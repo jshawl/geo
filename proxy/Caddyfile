@@ -1,3 +1,7 @@
+{
+	auto_https {$AUTO_HTTPS}
+}
+
 localhost:80 {
 	route /api* {
 		reverse_proxy server:8080
@@ -16,7 +20,7 @@ geo.jshawl.com {
 			ttl 24h
 			stale 24h
 			mode bypass_request
-			otter
+			max_size 50MB
 		}
 		reverse_proxy server:8080
 	}
