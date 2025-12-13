@@ -3,7 +3,7 @@
 set -e
 
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
-IMAGE=$(sed -n 's/^FROM \([^ ]*\).*/\1/p' "$SCRIPT_DIR/Dockerfile")
+IMAGE=$(sed -n 's/^FROM \([^ ]*\).*/\1/p; q' "$SCRIPT_DIR/Dockerfile")
 
 docker pull $IMAGE
 

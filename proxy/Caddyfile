@@ -1,7 +1,7 @@
 localhost:80 {
 	route /api/years {
 		cache {
-			ttl 10m
+			ttl 24h
 			stale 24h
 			mode bypass_request
 			otter {
