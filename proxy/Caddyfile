@@ -1,14 +1,4 @@
 localhost:80 {
-	route /api/years {
-		cache {
-			ttl 24h
-			stale 24h
-			mode bypass_request
-			otter
-		}
-		reverse_proxy server:8080
-	}
-
 	route /api* {
 		reverse_proxy server:8080
 	}
@@ -21,6 +11,15 @@ geo.jshawl.com {
 		{$HTTP_AUTH_USER} {$HTTP_AUTH_PASSWORD}
 	}
 	root * /srv
+	handle /api/years {
+		cache {
+			ttl 24h
+			stale 24h
+			mode bypass_request
+			otter
+		}
+		reverse_proxy server:8080
+	}
 	handle /api* {
 		reverse_proxy server:8080
 	}
