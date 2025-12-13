@@ -5,13 +5,13 @@ set -e
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 IMAGE=$(sed -n 's/^FROM \([^ ]*\).*/\1/p; q' "$SCRIPT_DIR/Dockerfile")
 
-docker pull $IMAGE
+docker build -t proxy $SCRIPT_DIR
 
 test_conf() {
     echo "🧪 testing $SCRIPT_DIR/$1"
     docker run --rm \
         -v $SCRIPT_DIR/Caddyfile:/etc/caddy/Caddyfile \
-        --entrypoint sh caddy \
+        --entrypoint sh proxy \
         -c "caddy validate --config /etc/caddy/Caddyfile"
     echo -e "✅ $1 is ok\n"
 }

@@ -4,9 +4,7 @@ localhost:80 {
 			ttl 24h
 			stale 24h
 			mode bypass_request
-			otter {
-				size 100
-			}
+			otter
 		}
 		reverse_proxy server:8080
 	}
