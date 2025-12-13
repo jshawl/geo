@@ -12,6 +12,7 @@ test_conf() {
     docker run --rm \
         -v $SCRIPT_DIR/Caddyfile:/etc/caddy/Caddyfile \
         --entrypoint sh proxy \
+        -e AUTO_HTTPS=off \
         -c "caddy validate --config /etc/caddy/Caddyfile"
     echo -e "✅ $1 is ok\n"
 }
