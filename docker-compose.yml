@@ -41,8 +41,6 @@ services:
     image: ghcr.io/jshawl/geo-proxy:main
     env_file: .env
     pull_policy: always
-    environment:
-      AUTO_HTTPS: "on"
     ports:
       - "80:80"
       - "443:443"

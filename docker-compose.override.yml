@@ -38,6 +38,6 @@ services:
     ports:
       - "9000:80"
     environment:
-      AUTO_HTTPS: "off"
+      AUTO_HTTPS: "auto_https off"
     volumes:
       - ./proxy/Caddyfile:/etc/caddy/Caddyfile

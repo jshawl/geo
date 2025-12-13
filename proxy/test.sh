@@ -9,7 +9,7 @@ docker build -t proxy $SCRIPT_DIR
 
 test_conf() {
     echo "🧪 testing $SCRIPT_DIR/Caddyfile"
-    docker run -e AUTO_HTTPS=off --rm \
+    docker run -e AUTO_HTTPS="auto_https off" --rm \
         -v $SCRIPT_DIR/Caddyfile:/etc/caddy/Caddyfile \
         --entrypoint sh proxy \
         -c "caddy validate --config /etc/caddy/Caddyfile"
