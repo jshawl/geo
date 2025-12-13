@@ -12,7 +12,7 @@ localhost:80 {
 }
 
 geo.jshawl.com {
-	basicauth {
+	basic_auth {
 		{$HTTP_AUTH_USER} {$HTTP_AUTH_PASSWORD}
 	}
 	root * /srv
