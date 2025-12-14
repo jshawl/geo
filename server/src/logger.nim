@@ -1,9 +1,17 @@
 import std / [logging]
 
-var logger = newConsoleLogger(fmtStr="[$datetime] - $levelname: ")
+var logger {.threadvar.}: ConsoleLogger
+
+proc getLogger(): ConsoleLogger =
+  if logger.isNil:
+    logger = newConsoleLogger(fmtStr="[$datetime] - $levelname: ")
+  logger
 
 proc info*(str: string) =
-    logger.log(lvlInfo, str)
+    getLogger().log(lvlInfo, str)
 
 proc warn*(str: string) =
-    logger.log(lvlWarn, str)
+    getLogger().log(lvlWarn, str)
+
+proc error*(str: string) =
+    getLogger().log(lvlError, str)

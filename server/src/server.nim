@@ -1,4 +1,4 @@
-import std / [asyncdispatch, asynchttpserver, json, uri, tables, strutils, sequtils]
+import std / [asyncdispatch, asynchttpserver, json, uri, tables, strutils]
 import ./database
 import ./logger
 
@@ -11,14 +11,12 @@ proc handleSignal() {.noconv.} =
 setControlCHook(handleSignal)
 
 proc handleRequest*(db: DbConn, path: string, queryParams: Table[string, string]): (HttpCode, JsonNode) =
-  case path
-  of "/api/years":
-    let years = db.findYears()
-    return (Http200, %* years)
-  of "/api/geohashes":
-    let hasKeys = ["north", "east", "south", "west", "precision"]
-      .all(proc (key: string): bool = queryParams.hasKey(key))
-    if hasKeys:
+  try:
+    case path
+    of "/api/years":
+      let years = db.findYears()
+      return (Http200, %* years)
+    of "/api/geohashes":
       let north = parseFloat(queryParams["north"])
       let east = parseFloat(queryParams["east"])
       let south = parseFloat(queryParams["south"])
@@ -26,21 +24,23 @@ proc handleRequest*(db: DbConn, path: string, queryParams: Table[string, string]
       let precision = parseInt(queryParams["precision"])
       let hashes = db.findGeoHashes(north, east, south, west, precision)
       return (Http200, %* hashes)
-    return (Http400, %* "missing keys")
-  of "/api/months":
-    let months = db.findMonths(queryParams["year"])
-    return (Http200, %* months)
-  of "/api/days":
-    let days = db.findDays(queryParams["year"], queryParams["month"])
-    return (Http200, %* days)
-  of "/api":
-    let events = if queryParams.hasKey("geohash"):
-      db.findMultipleEvents(queryParams["geohash"])
+    of "/api/months":
+      let months = db.findMonths(queryParams["year"])
+      return (Http200, %* months)
+    of "/api/days":
+      let days = db.findDays(queryParams["year"], queryParams["month"])
+      return (Http200, %* days)
+    of "/api":
+      let events = if queryParams.hasKey("geohash"):
+        db.findMultipleEvents(queryParams["geohash"])
+      else:
+        db.findMultipleEvents(queryParams["from"], queryParams["to"])
+      return (Http200, %* events)
     else:
-      db.findMultipleEvents(queryParams["from"], queryParams["to"])
-    return (Http200, %* events)
-  else:
-    return (Http404, %* "Not found")
+      return (Http404, %* "Not found")
+  except CatchableError as e:
+    error($e.name & " - " & e.msg)
+    return (Http500, %* "Internal server error")
 
 proc main {.async.} =
   var server = newAsyncHttpServer()
