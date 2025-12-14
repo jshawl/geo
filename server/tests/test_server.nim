@@ -32,13 +32,13 @@ suite "server":
         check code == Http200
         let data = %*["s05pp"]
         check body == data
-    test "/api/geohashes 400":
+    test "/api/geohashes 500":
         let (code, body) = handleRequest(db, "/api/geohashes", {
           "north": "3.0",
           "south": "1.0",
           "east": "5.0",
         }.toTable)
-        check code == Http400
+        check code == Http500
     test "/api/months":
         let (code, body) = handleRequest(db, "/api/months", {"year": "2000"}.toTable)
         check code == Http200
