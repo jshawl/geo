@@ -1,13 +1,14 @@
 import "./map.css";
 import Geohash from "latlon-geohash";
 import type * as LeafletTypes from "leaflet";
+import { assert } from "./utils";
 
-type Event = {
+export interface Event {
   created_at?: string;
   geohash?: string;
   lat: number;
   lon: number;
-};
+}
 
 let map: LeafletTypes.Map | undefined;
 
@@ -29,6 +30,8 @@ export const render = (events: Event[], options?: { polyline: boolean }) => {
       const markers = window.L.featureGroup().addTo(map);
       events.map((event) => {
         const ts = event.created_at?.slice(0, 10);
+        assert(ts);
+        assert(event.geohash);
         window.L.marker([event.lat, event.lon])
           .addTo(markers)
           .bindPopup(`<a href='/#/${ts}'>${ts}</a> - ${event.geohash}`);
@@ -60,19 +63,23 @@ export const destroy = () => {
 
 export const clear = () => {
   map?.eachLayer((layer) => {
-    // @ts-expect-error private
+    // @ts-expect-error _path is a private property 🙈
     if (layer._path != undefined) {
       map?.removeLayer(layer);
     }
   });
 };
 
-export const addEventListener = (event: string, callback: any) => {
+export const addEventListener = (
+  event: string,
+  callback: LeafletTypes.LeafletEventHandlerFn
+) => {
   map?.on(event, callback);
 };
 
 export const getBounds = () => {
-  const bounds = map!.getBounds();
+  assert(map);
+  const bounds = map.getBounds();
   const north = bounds.getNorthEast().lat;
   const east = bounds.getNorthEast().lng;
   const south = bounds.getSouthWest().lat;
@@ -80,13 +87,22 @@ export const getBounds = () => {
   return { north, east, south, west };
 };
 
-export const getZoom = () => map!.getZoom();
-export const getCenter = () => map!.getCenter();
+export const getZoom = () => {
+  assert(map);
+  return map.getZoom();
+};
+
+export const getCenter = () => {
+  assert(map);
+  return map.getCenter();
+};
+
 export const setView = (coords: LeafletTypes.LatLngExpression, zoom: number) =>
   map?.setView(coords, zoom);
 
 export const getPrecision = () => {
-  switch (map!.getZoom()) {
+  assert(map);
+  switch (map.getZoom()) {
     case 0:
     case 1:
     case 2:
@@ -120,21 +136,27 @@ export const getPrecision = () => {
 };
 
 export const addRectangle = (bounds: LeafletTypes.LatLngBoundsExpression) => {
+  assert(map);
   return window.L.rectangle(bounds, {
     color: "#000",
     weight: 1,
     fillOpacity: 0.3,
     stroke: true,
-  }).addTo(map!);
+  }).addTo(map);
 };
 
 let fetchedHashes = [];
 export const addGeoHashes = async () => {
   const { north, east, south, west } = getBounds();
   const precision = getPrecision();
-  const url = `/api/geohashes?north=${north}&south=${south}&east=${east}&west=${west}&precision=${precision}`;
+  const params = new URLSearchParams();
+  const data: Record<string, number> = { north, east, south, west, precision };
+  Object.keys(data).forEach((key) => {
+    params.append(key, String(data[key]));
+  });
+  const url = `/api/geohashes?${params.toString()}`;
   const response = await fetch(url);
-  const hashes: string[] = await response.json();
+  const hashes = (await response.json()) as string[];
   if (fetchedHashes.length != hashes.length) {
     clear();
     fetchedHashes = hashes;
@@ -150,20 +172,21 @@ export const addGeoHashes = async () => {
 };
 
 export const updateUrlFromMap = () => {
+  const { lat, lng } = getCenter();
   const values: Record<string, number> = {
-    ...getCenter(),
+    lat,
+    lng,
     zoom: getZoom(),
   };
   const params = new URLSearchParams();
-  for (let key in values) {
-    params.append(key, `${values[key]}`);
+  for (const key in values) {
+    params.append(key, String(values[key]));
   }
   window.history.pushState(null, "", "#/?" + params.toString());
 };
 
 export const updateMapFromUrl = () => {
-  const hasParams = /lat=/.test(location.hash);
-  if (!hasParams) {
+  if (!location.hash.includes("lat=")) {
     return;
   }
   const params = new URLSearchParams(window.location.hash.slice(2));
