@@ -2,7 +2,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { breadcrumbs, render, type Count } from "./view";
 import * as map from "./map";
-vi.mock("./map");
+
+vi.mock("./map", () => ({
+  render: vi.fn(),
+  addGeoHashes: vi.fn(),
+  updateMapFromUrl: vi.fn(),
+  updateUrlFromMap: vi.fn(),
+  addEventListener: (_type: string, fn: () => void) => {
+    fn();
+  },
+}));
+
 describe("view", () => {
   describe("breadcrumbs", () => {
     it("makes each part of the date clickable", () => {
@@ -106,14 +116,17 @@ describe("view", () => {
     });
 
     describe("render years", () => {
-      it("fetches data and renders a list of years and the map", async () => {
+      beforeEach(() => {
         const data: Count<"year">[] = [{ year: "2025", count: "42" }];
         month = "";
         day = "";
         year = "";
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
+        vi.useFakeTimers();
         render({ view, year, month, day, geohash });
+      });
 
+      it("fetches data and renders a list of years and the map", async () => {
         expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(
           expect.stringMatching(/\/api\/years/)
         );
@@ -123,6 +136,18 @@ describe("view", () => {
           );
         });
         expect(map.render).toHaveBeenCalledOnce();
+      });
+
+      it("updates geohash markers on map move", async () => {
+        await vi.waitFor(() => {
+          expect(view.innerHTML).toContain(
+            '<li><a href="/#/2025">2025</a> - 42</li>'
+          );
+        });
+        expect(map.addGeoHashes).toHaveBeenCalledOnce();
+        // addEventListener move is invoked automatically in mock
+        vi.advanceTimersByTime(500);
+        expect(map.addGeoHashes).toHaveBeenCalledTimes(2);
       });
     });
 
