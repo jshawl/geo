@@ -1,7 +1,7 @@
 import { assert, debounce } from "./utils";
 import * as map from "./map";
 
-type Count<T extends "year" | "month" | "day"> = Record<T, string> & {
+export type Count<T extends "year" | "month" | "day"> = Record<T, string> & {
   count: string;
 };
 
