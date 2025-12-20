@@ -13,7 +13,7 @@ type ViewProps<T extends string> = {
   geohash?: string;
 } & Record<T, string>;
 
-const breadcrumbs = (strings: string[]) =>
+export const breadcrumbs = (strings: string[]) =>
   `<h2><a href='/#/'>~/</a> ` +
   strings
     .map((el, i, all) => {
