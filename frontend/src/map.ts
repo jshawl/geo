@@ -67,7 +67,10 @@ export const clear = () => {
   });
 };
 
-export const addEventListener = (event: string, callback: any) => {
+export const addEventListener = (
+  event: string,
+  callback: LeafletTypes.LeafletEventHandlerFn
+) => {
   map?.on(event, callback);
 };
 
@@ -155,7 +158,7 @@ export const updateUrlFromMap = () => {
     zoom: getZoom(),
   };
   const params = new URLSearchParams();
-  for (let key in values) {
+  for (const key in values) {
     params.append(key, `${values[key]}`);
   }
   window.history.pushState(null, "", "#/?" + params.toString());
