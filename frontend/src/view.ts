@@ -1,7 +1,7 @@
 import { assert, debounce } from "./utils";
 import * as map from "./map";
 
-type Count<T extends "year" | "month" | "day"> = Record<T, string> & {
+export type Count<T extends "year" | "month" | "day"> = Record<T, string> & {
   count: string;
 };
 
@@ -13,7 +13,7 @@ type ViewProps<T extends string> = {
   geohash?: string;
 } & Record<T, string>;
 
-const breadcrumbs = (strings: string[]) =>
+export const breadcrumbs = (strings: string[]) =>
   `<h2><a href='/#/'>~/</a> ` +
   strings
     .map((el, i, all) => {
