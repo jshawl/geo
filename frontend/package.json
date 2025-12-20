@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --coverage",
+    "test": "vitest run --coverage --sequence.shuffle true",
     "test:watch": "vitest --coverage"
   },
   "devDependencies": {
