@@ -51,28 +51,20 @@ describe("view", () => {
       it("fetches data and renders the map", async () => {
         const data: map.Event[] = [{ lat: 1.23, lon: 4.56 }];
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
-        render({ view, year, month, day, geohash });
-
+        vi.stubEnv("TZ", "UTC");
+        await render({ view, year, month, day, geohash });
         expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(
-          expect.stringMatching(/\/api\?from=2025-12-20(.*)&to=2025-12-21/)
+          "/api?from=2025-12-20T00:00:00.000Z&to=2025-12-21T00:00:00.000Z"
         );
-        await vi.waitFor(() => {
-          expect(map.render).toHaveBeenCalledOnce();
-        });
+        expect(map.render).toHaveBeenCalledOnce();
         expect(map.render).toHaveBeenCalledWith(data);
       });
 
       it("handles no events", async () => {
         const data: map.Event[] = [];
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
-        render({ view, year, month, day, geohash });
-
-        expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(
-          expect.stringMatching(/\/api\?from=2025-12-20(.*)&to=2025-12-21/)
-        );
-        await vi.waitFor(() => {
-          expect(view.innerHTML).toContain("No events found.");
-        });
+        await render({ view, year, month, day, geohash });
+        expect(view.innerHTML).toContain("No events found.");
       });
     });
 
@@ -81,16 +73,14 @@ describe("view", () => {
         const data: Count<"day">[] = [{ day: "2025-12-01", count: "42" }];
         day = "";
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
-        render({ view, year, month, day, geohash });
+        await render({ view, year, month, day, geohash });
 
         expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(
-          expect.stringMatching(/\/api\/days\?year=2025&month=12/)
+          "/api/days?year=2025&month=12"
         );
-        await vi.waitFor(() => {
-          expect(view.innerHTML).toContain(
-            '<li><a href="/#/2025-12-01">2025-12-01</a> - 42</li>'
-          );
-        });
+        expect(view.innerHTML).toContain(
+          '<li><a href="/#/2025-12-01">2025-12-01</a> - 42</li>'
+        );
         expect(map.render).not.toHaveBeenCalled();
       });
     });
@@ -101,16 +91,14 @@ describe("view", () => {
         month = "";
         day = "";
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
-        render({ view, year, month, day, geohash });
+        await render({ view, year, month, day, geohash });
 
         expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(
-          expect.stringMatching(/\/api\/months\?year=2025/)
+          "/api/months?year=2025"
         );
-        await vi.waitFor(() => {
-          expect(view.innerHTML).toContain(
-            '<li><a href="/#/2025-12">2025-12</a> - 42</li>'
-          );
-        });
+        expect(view.innerHTML).toContain(
+          '<li><a href="/#/2025-12">2025-12</a> - 42</li>'
+        );
         expect(map.render).not.toHaveBeenCalled();
       });
     });
@@ -123,27 +111,22 @@ describe("view", () => {
         year = "";
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
         vi.useFakeTimers();
-        render({ view, year, month, day, geohash });
       });
 
       it("fetches data and renders a list of years and the map", async () => {
-        expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(
-          expect.stringMatching(/\/api\/years/)
+        await render({ view, year, month, day, geohash });
+        expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith("/api/years");
+        expect(view.innerHTML).toContain(
+          '<li><a href="/#/2025">2025</a> - 42</li>'
         );
-        await vi.waitFor(() => {
-          expect(view.innerHTML).toContain(
-            '<li><a href="/#/2025">2025</a> - 42</li>'
-          );
-        });
         expect(map.render).toHaveBeenCalledOnce();
       });
 
       it("updates geohash markers on map move", async () => {
-        await vi.waitFor(() => {
-          expect(view.innerHTML).toContain(
-            '<li><a href="/#/2025">2025</a> - 42</li>'
-          );
-        });
+        await render({ view, year, month, day, geohash });
+        expect(view.innerHTML).toContain(
+          '<li><a href="/#/2025">2025</a> - 42</li>'
+        );
         expect(map.addGeoHashes).toHaveBeenCalledOnce();
         // addEventListener move is invoked automatically in mock
         vi.advanceTimersByTime(500);
@@ -162,28 +145,24 @@ describe("view", () => {
       it("fetches data and renders a list of events and the map", async () => {
         const data: map.Event[] = [{ lat: 1.23, lon: 4.56 }];
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
-        render({ view, year, month, day, geohash });
+        await render({ view, year, month, day, geohash });
 
         expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(
-          expect.stringMatching(/\/api\?geohash=abc/)
+          "/api?geohash=abc"
         );
-        await vi.waitFor(() => {
-          expect(map.render).toHaveBeenCalledOnce();
-        });
+        expect(map.render).toHaveBeenCalledOnce();
         expect(map.render).toHaveBeenCalledWith(data, { polyline: false });
       });
 
       it("handles no events", async () => {
         const data: map.Event[] = [];
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
-        render({ view, year, month, day, geohash });
+        await render({ view, year, month, day, geohash });
 
         expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(
-          expect.stringMatching(/\/api\?geohash=abc/)
+          "/api?geohash=abc"
         );
-        await vi.waitFor(() => {
-          expect(view.innerHTML).toContain("No events found.");
-        });
+        expect(view.innerHTML).toContain("No events found.");
       });
     });
   });

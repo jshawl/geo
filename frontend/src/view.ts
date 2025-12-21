@@ -22,7 +22,7 @@ export const breadcrumbs = (strings: string[]) =>
     .join("-") +
   `</h2>`;
 
-const renderDay = ({
+const renderDay = async ({
   view,
   year,
   month,
@@ -36,22 +36,25 @@ const renderDay = ({
   const from = new Date(parsed).toISOString();
   const to = new Date(parsed + 86400000).toISOString();
   const url = `/api?from=${from}&to=${to}`;
-  void fetch(url).then(async (response) => {
-    const data = (await response.json()) as map.Event[];
-    if (data.length > 0) {
-      map.render(data);
-    } else {
-      view.innerHTML += "No events found.";
-    }
-  });
+  const response = await fetch(url);
+  const data = (await response.json()) as map.Event[];
+  if (data.length > 0) {
+    map.render(data);
+  } else {
+    view.innerHTML += "No events found.";
+  }
 };
 
-const renderMonth = ({ view, year, month }: ViewProps<"year" | "month">) => {
+const renderMonth = async ({
+  view,
+  year,
+  month,
+}: ViewProps<"year" | "month">) => {
   view.innerHTML = breadcrumbs([year, month]);
   const url = `/api/days?year=${year}&month=${month}`;
-  void fetch(url).then(async (response) => {
-    const data = (await response.json()) as Count<"day">[];
-    view.innerHTML += `<ul>
+  const response = await fetch(url);
+  const data = (await response.json()) as Count<"day">[];
+  view.innerHTML += `<ul>
       ${data
         .map(
           ({ day, count }) =>
@@ -59,15 +62,14 @@ const renderMonth = ({ view, year, month }: ViewProps<"year" | "month">) => {
         )
         .join("")}
     </ul>`;
-  });
 };
 
-const renderYear = ({ view, year }: ViewProps<"year">) => {
+const renderYear = async ({ view, year }: ViewProps<"year">) => {
   view.innerHTML = breadcrumbs([year]);
   const url = `/api/months?year=${year}`;
-  void fetch(url).then(async (response) => {
-    const data = (await response.json()) as Count<"month">[];
-    view.innerHTML += `<ul>
+  const response = await fetch(url);
+  const data = (await response.json()) as Count<"month">[];
+  view.innerHTML += `<ul>
       ${data
         .map(
           ({ month, count }) =>
@@ -75,10 +77,9 @@ const renderYear = ({ view, year }: ViewProps<"year">) => {
         )
         .join("")}
     </ul>`;
-  });
 };
 
-const renderYears = ({ view }: ViewProps<never>) => {
+const renderYears = async ({ view }: ViewProps<never>) => {
   map.render([]);
   map.updateMapFromUrl();
   void map.addGeoHashes();
@@ -90,9 +91,9 @@ const renderYears = ({ view }: ViewProps<never>) => {
   });
   view.innerHTML = breadcrumbs([]);
   const url = `/api/years`;
-  void fetch(url).then(async (response) => {
-    const data = (await response.json()) as Count<"year">[];
-    view.innerHTML += `<ul>
+  const response = await fetch(url);
+  const data = (await response.json()) as Count<"year">[];
+  view.innerHTML += `<ul>
       ${data
         .map(
           ({ year, count }) =>
@@ -100,24 +101,22 @@ const renderYears = ({ view }: ViewProps<never>) => {
         )
         .join("")}
     </ul>`;
-  });
 };
 
-const renderEvents = ({ view, geohash }: ViewProps<"geohash">) => {
+const renderEvents = async ({ view, geohash }: ViewProps<"geohash">) => {
   view.innerHTML = breadcrumbs([]);
 
   const url = `/api?geohash=${geohash}`;
-  void fetch(url).then(async (response) => {
-    const data = (await response.json()) as map.Event[];
-    if (data.length > 0) {
-      map.render(data, { polyline: false });
-    } else {
-      view.innerHTML += "No events found.";
-    }
-  });
+  const response = await fetch(url);
+  const data = (await response.json()) as map.Event[];
+  if (data.length > 0) {
+    map.render(data, { polyline: false });
+  } else {
+    view.innerHTML += "No events found.";
+  }
 };
 
-export const render = ({
+export const render = async ({
   view,
   year,
   month,
@@ -125,25 +124,20 @@ export const render = ({
   geohash,
 }: ViewProps<"year" | "month" | "day" | "geohash">) => {
   if (year && month && day) {
-    renderDay({ view, year, month, day });
-    return;
+    return renderDay({ view, year, month, day });
   }
 
   if (year && month) {
-    renderMonth({ view, year, month });
-    return;
+    return renderMonth({ view, year, month });
   }
 
   if (year) {
-    renderYear({ view, year });
-    return;
+    return renderYear({ view, year });
   }
 
   if (geohash) {
-    renderEvents({ view, geohash });
-    return;
+    return renderEvents({ view, geohash });
   }
 
-  renderYears({ view });
-  return;
+  return renderYears({ view });
 };

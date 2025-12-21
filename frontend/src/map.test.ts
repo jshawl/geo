@@ -154,23 +154,19 @@ describe("map", () => {
     it("adds geohashes", async () => {
       const data: string[] = ["db"];
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
-      void map.addGeoHashes();
-      await vi.waitFor(() => {
-        expect(mockLeaflet.rectangle).toHaveBeenCalledOnce();
-      });
+      await map.addGeoHashes();
+      expect(mockLeaflet.rectangle).toHaveBeenCalledOnce();
     });
 
     it("clears existing geohashes", async () => {
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(["db"]));
-      void map.addGeoHashes();
+      await map.addGeoHashes();
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(
         Response.json(["db", "bc"])
       );
       mockEachLayer({ _path: true });
-      void map.addGeoHashes();
-      await vi.waitFor(() => {
-        expect(mockLeaflet.removeLayer).toHaveBeenCalledOnce();
-      });
+      await map.addGeoHashes();
+      expect(mockLeaflet.removeLayer).toHaveBeenCalledOnce();
       // no clear this time because the hashes are the same
       vi.mocked(mockLeaflet.removeLayer)?.mockClear();
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(

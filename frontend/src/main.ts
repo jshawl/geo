@@ -20,7 +20,7 @@ export const main = () => {
     /^(\d{4})-?(\d{2})?-?(\d{2})?/.exec(dateParam) ?? []
   );
   const [__, geohash] = Array.from(/^(\w+)/.exec(dateParam) ?? "");
-  render({ view, year, month, day, geohash });
+  void render({ view, year, month, day, geohash });
 };
 
 addEventListener("load", main);
