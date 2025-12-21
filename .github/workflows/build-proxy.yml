@@ -18,7 +18,6 @@ jobs:
         working-directory: proxy/
     steps:
       - uses: actions/checkout@v4
-      - name: Test config
       - run: ./test.sh
   build:
     permissions:

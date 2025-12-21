@@ -18,7 +18,6 @@ jobs:
         working-directory: server/
     steps:
       - uses: actions/checkout@v4
-      - name: Test config
       - run: mkdir -p db/
       - run: make test
   build:
