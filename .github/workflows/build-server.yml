@@ -18,6 +18,7 @@ jobs:
       - run: mkdir -p server/db/
       - run: make test
   build:
+    needs: test
     permissions:
       contents: read
       packages: write
