@@ -1,4 +1,4 @@
-name: Docker (reusable)
+name: reusable
 
 on:
   workflow_call:
@@ -9,9 +9,6 @@ on:
       context:
         required: true
         type: string
-      test-command:
-        required: false
-        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -19,19 +16,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  test:
-    if: inputs.test-command != ''
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Test
-        run: ${{ inputs.test-command }}
-
   build:
     runs-on: ubuntu-latest
-    needs: [test]
-    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

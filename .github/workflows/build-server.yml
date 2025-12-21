@@ -1,4 +1,4 @@
-name: Docker (server)
+name: server
 
 on:
   push:
@@ -11,7 +11,14 @@ on:
       - server/**
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir -p server/db/
+      - run: make test
   build:
+    needs: test
     permissions:
       contents: read
       packages: write
@@ -20,4 +27,3 @@ jobs:
     with:
       service: server
       context: server/
-      test-command: "mkdir -p server/db/ && make test"

@@ -1,4 +1,4 @@
-name: Docker (proxy)
+name: proxy
 
 on:
   push:
@@ -11,7 +11,16 @@ on:
       - proxy/**
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proxy/
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./test.sh
   build:
+    needs: test
     permissions:
       contents: read
       packages: write
@@ -20,4 +29,3 @@ jobs:
     with:
       service: proxy
       context: proxy/
-      test-command: "./proxy/test.sh"
