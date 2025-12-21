@@ -9,9 +9,6 @@ on:
       context:
         required: true
         type: string
-      test-command:
-        required: false
-        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -21,7 +18,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
