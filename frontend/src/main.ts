@@ -23,7 +23,5 @@ export const main = () => {
   void render({ view, year, month, day, geohash });
 };
 
-// trigger
-
 addEventListener("load", main);
 addEventListener("hashchange", main);

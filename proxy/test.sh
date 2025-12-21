@@ -23,8 +23,6 @@ cleanup() {
     fi
 }
 
-# trigger
-
 trap cleanup EXIT
 
 test_conf
