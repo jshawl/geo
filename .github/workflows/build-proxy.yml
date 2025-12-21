@@ -11,6 +11,16 @@ on:
       - proxy/**
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: proxy/
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test config
+      - run: ./test.sh
+
   build:
     permissions:
       contents: read
@@ -20,4 +30,3 @@ jobs:
     with:
       service: proxy
       context: proxy/
-      test-command: "./proxy/test.sh"

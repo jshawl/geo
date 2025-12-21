@@ -11,6 +11,16 @@ on:
       - server/**
 
 jobs:
+   test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test config
+      - run: mkdir -p db/
+      - run: make test
   build:
     permissions:
       contents: read
@@ -20,4 +30,3 @@ jobs:
     with:
       service: server
       context: server/
-      test-command: "mkdir -p server/db/ && make test"

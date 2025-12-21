@@ -85,7 +85,7 @@ proc neighbor*(hash: string, direction: string): string =
   if lastChr in BORDERS[direction][evenOdd]:
     base = neighbor(base, direction)
   base & Base32[NEIGHBORS[direction][evenOdd].find(lastChr)]
-
+# trigger
 proc sections*(north, east, south, west: float, precision: int): seq[string] =
   let topLeft = encode(north, west, precision)
   let topRight = encode(north, east, precision)
