@@ -13,12 +13,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server/
     steps:
       - uses: actions/checkout@v4
-      - run: mkdir -p db/
+      - run: mkdir -p server/db/
       - run: make test
   build:
     permissions:
