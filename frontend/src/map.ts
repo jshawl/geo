@@ -190,8 +190,10 @@ export const updateMapFromUrl = () => {
     return;
   }
   const params = new URLSearchParams(window.location.hash.slice(2));
-  const [lat, lon, zoom] = ["lat", "lng", "zoom"].map((key) =>
-    parseFloat(params.get(key) ?? "")
-  );
+  const [lat, lon, zoom] = ["lat", "lng", "zoom"].map((key) => {
+    const value = params.get(key);
+    assert(typeof value === "string");
+    return parseFloat(value);
+  });
   setView([lat, lon], zoom);
 };
