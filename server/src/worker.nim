@@ -35,7 +35,11 @@ proc realHttpGet*(url: string): string =
   return client.getContent(url)
 
 proc fetchData*(db: DbConn, f: DataFetcher, url: string): JsonNode =
-  result = parseJson(f.httpGet(url))
+  try:
+    result = parseJson(f.httpGet(url))
+  except CatchableError as e:
+    error($e.name & " - " & e.msg)
+    result = %* {"Data": []}
   var inserted = 0
   let results = result["Data"]
   for datum in results:
