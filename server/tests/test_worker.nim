@@ -1,7 +1,7 @@
 import ../src/worker
 import ../src/database
 import unittest
-import std/[os, tempfiles, strutils]
+import std/[os, tempfiles, strutils, httpclient]
 
 proc createMockGet(response: string): proc(url: string): string =
   return proc(url: string): string = response
@@ -33,3 +33,14 @@ suite "worker":
     check parseFloat(results[0][1]) == 1.234
     check parseFloat(results[0][2]) == 5.678
     check results[0][3] == "s0hp10wsdfr8"
+
+  test "fetchData doesn't throw":
+    let mockGet500 = proc (url: string): string =
+      raise newException(HttpRequestError, "Internal Server Error")
+    let fetcher500 = DataFetcher(httpGet: mockGet500)
+    var didThrow = false
+    try:
+      discard fetchData(db, fetcher500, "https://example.com")
+    except HttpRequestError:
+      didThrow = true
+    check didThrow == false
