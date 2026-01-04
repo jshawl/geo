@@ -2,95 +2,149 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as map from "./map";
-import type * as LeafletTypes from "leaflet";
 
-let mockLeaflet: Partial<typeof LeafletTypes> & Partial<LeafletTypes.Map>;
+const mocks = vi.hoisted(() => {
+  const map = {
+    on: vi.fn(
+      (
+        _event,
+        callbackOrTarget: ((args: unknown) => void) | string,
+        callback: (args: unknown) => string
+      ) => {
+        if (typeof callbackOrTarget === "function") {
+          callbackOrTarget({});
+        } else {
+          callback({});
+        }
+      }
+    ),
+    addLayer: vi.fn(),
+    addSource: vi.fn(),
+    addControl: vi.fn(),
+    fitBounds: vi.fn(),
+    getBounds: vi.fn(() => ({
+      getNorthEast: () => ({}),
+      getSouthWest: () => ({}),
+    })),
+    getCenter: vi.fn(),
+    getSource: () => true,
+    getStyle: vi.fn<() => { layers: unknown[] }>(() => ({
+      layers: [],
+      sources: [],
+    })),
+    getZoom: vi.fn(),
+    remove: vi.fn(),
+    removeLayer: vi.fn(),
+    removeSource: vi.fn(),
+    setCenter: vi.fn(),
+    setZoom: vi.fn(),
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+  class MockMap {
+    constructor() {
+      Object.assign(this, mocks.map);
+    }
+  }
+
+  class MockPopup {
+    addTo() {
+      // pass
+    }
+    setHTML() {
+      return this;
+    }
+    setLngLat() {
+      return this;
+    }
+  }
+
+  class MockLngLatBounds {
+    extend() {
+      // pass
+    }
+  }
+
+  class MockMarker {
+    addTo() {
+      // pass
+    }
+    setLngLat() {
+      return this;
+    }
+    setPopup() {
+      return this;
+    }
+  }
+
+  return { MockMap, map, MockPopup, MockLngLatBounds, MockMarker };
+});
+
+vi.mock("mapbox-gl", () => ({
+  default: {
+    Map: mocks.MockMap,
+    NavigationControl: vi.fn(),
+    LngLatBounds: mocks.MockLngLatBounds,
+    Marker: mocks.MockMarker,
+    Popup: mocks.MockPopup,
+  },
+}));
 
 describe("map", () => {
   beforeEach(() => {
-    mockLeaflet = {
-      map: vi.fn().mockReturnThis(),
-      // @ts-expect-error missing wms
-      tileLayer: vi.fn().mockReturnThis(),
-      addTo: vi.fn().mockReturnThis(),
-      setView: vi.fn(),
-      LatLng: vi.fn(),
-      // @ts-expect-error Polyline is a constructor
-      Polyline: vi.fn().mockImplementation(function () {
-        return {
-          addTo: vi.fn(),
-          getBounds: vi.fn(),
-        };
-      }),
-      fitBounds: vi.fn(),
-      getBounds: vi.fn().mockImplementation(() => ({
-        getNorthEast: () => ({ lat: 1.23 }),
-        getSouthWest: () => ({ lat: 1.23 }),
-      })),
-      featureGroup: vi.fn().mockReturnThis(),
-      marker: vi.fn().mockReturnThis(),
-      bindPopup: vi.fn(),
-      remove: vi.fn(),
-      eachLayer: vi.fn(),
-      removeLayer: vi.fn(),
-      on: vi.fn(),
-      getZoom: vi.fn(),
-      getCenter: vi.fn(),
-      rectangle: vi.fn().mockReturnThis(),
-    };
-    vi.stubGlobal("L", mockLeaflet);
     map.destroy();
     map.render([{ lat: 1.23, lon: 4.56 }]);
   });
 
   describe("render", () => {
     it("adds a polyline", () => {
-      expect(mockLeaflet.Polyline).toHaveBeenCalled();
+      expect(mocks.map.addSource).toHaveBeenCalledWith(
+        "polyline",
+        expect.any(Object)
+      );
     });
 
     it("polyline: false", () => {
-      vi.mocked(mockLeaflet.Polyline)?.mockClear();
+      mocks.map.addSource.mockClear();
       map.render(
         [{ lat: 1.23, lon: 4.56, created_at: "2025-12-20", geohash: "abc" }],
         {
           polyline: false,
         }
       );
-      expect(mockLeaflet.Polyline).not.toHaveBeenCalled();
+      expect(mocks.map.addSource).not.toHaveBeenCalled();
     });
 
     it("handles empty events", () => {
-      vi.mocked(mockLeaflet.Polyline)?.mockClear();
+      mocks.map.addSource.mockClear();
       map.render([]);
-      expect(mockLeaflet.Polyline).not.toHaveBeenCalled();
+      expect(mocks.map.addSource).not.toHaveBeenCalled();
     });
   });
 
   describe("destroy", () => {
     it("supports no map", () => {
+      mocks.map.remove.mockClear();
       map.destroy();
       map.destroy();
-      expect(mockLeaflet.remove).toHaveBeenCalledOnce();
+      expect(mocks.map.remove).toHaveBeenCalledOnce();
     });
   });
 
   describe("clear", () => {
     it("supports no map", () => {
+      mocks.map.removeLayer.mockClear();
+      mockEachLayer([]);
       map.destroy();
       map.clear();
-      expect(mockLeaflet.removeLayer).not.toHaveBeenCalled();
-    });
-
-    it("supports undefined layer paths", () => {
-      mockEachLayer({ _path: undefined });
-      map.clear();
-      expect(mockLeaflet.removeLayer).not.toHaveBeenCalled();
+      expect(mocks.map.removeLayer).not.toHaveBeenCalled();
     });
 
     it("removes tiles", () => {
-      mockEachLayer({ _path: true });
+      mocks.map.removeLayer.mockClear();
+      mockEachLayer([{ id: "geo-example" }]);
       map.clear();
-      expect(mockLeaflet.removeLayer).toHaveBeenCalledOnce();
+      expect(mocks.map.removeLayer).toHaveBeenCalledOnce();
     });
   });
 
@@ -98,42 +152,50 @@ describe("map", () => {
     it("adds event listeners", () => {
       const fn = () => undefined;
       map.addEventListener("move", fn);
-      expect(mockLeaflet.on).toHaveBeenCalledWith("move", fn);
+      expect(mocks.map.on).toHaveBeenCalledWith("move", fn);
     });
   });
 
   describe("getBounds", () => {
     it("gets bounds", () => {
+      mocks.map.getBounds.mockClear();
       map.getBounds();
-      expect(mockLeaflet.getBounds).toHaveBeenCalledOnce();
+      expect(mocks.map.getBounds).toHaveBeenCalledOnce();
     });
   });
 
   describe("getZoom", () => {
     it("gets zoom", () => {
+      mocks.map.getZoom.mockClear();
       map.getZoom();
-      expect(mockLeaflet.getZoom).toHaveBeenCalledOnce();
+      expect(mocks.map.getZoom).toHaveBeenCalledOnce();
     });
   });
 
   describe("getCenter", () => {
     it("gets center", () => {
+      mocks.map.getCenter.mockClear();
       map.getCenter();
-      expect(mockLeaflet.getCenter).toHaveBeenCalledOnce();
+      expect(mocks.map.getCenter).toHaveBeenCalledOnce();
     });
   });
 
   describe("setView", () => {
     it("sets view", () => {
-      map.setView([0, 0], 1);
-      expect(mockLeaflet.setView).toHaveBeenCalledWith([0, 0], 1);
+      map.setView({ lon: 1, lat: 2, zoom: 3 });
+      expect(mocks.map.setCenter).toHaveBeenCalledWith([1, 2], {
+        animate: false,
+      });
+      expect(mocks.map.setZoom).toHaveBeenCalledWith(3, {
+        animate: false,
+      });
     });
   });
 
   describe("getPrecision", () => {
     it("gets precision", () => {
       for (let i = 0; i < 20; i++) {
-        vi.mocked(mockLeaflet.getZoom)?.mockImplementationOnce(() => i);
+        vi.mocked(mocks.map.getZoom).mockImplementationOnce(() => i);
         expect(map.getPrecision()).toBeLessThan(20);
       }
     });
@@ -141,8 +203,11 @@ describe("map", () => {
 
   describe("addRectangle", () => {
     it("adds a rectangle", () => {
-      map.addRectangle([[1, 2]]);
-      expect(mockLeaflet.rectangle).toHaveBeenCalledOnce();
+      map.addRectangle([[1, 2]], "abc");
+      expect(mocks.map.addSource).toHaveBeenCalledWith(
+        "geo-abc",
+        expect.any(Object)
+      );
     });
   });
 
@@ -155,7 +220,10 @@ describe("map", () => {
       const data: string[] = ["db"];
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
       await map.addGeoHashes();
-      expect(mockLeaflet.rectangle).toHaveBeenCalledOnce();
+      expect(mocks.map.addSource).toHaveBeenCalledWith(
+        "geo-db",
+        expect.any(Object)
+      );
     });
 
     it("clears existing geohashes", async () => {
@@ -164,16 +232,16 @@ describe("map", () => {
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(
         Response.json(["db", "bc"])
       );
-      mockEachLayer({ _path: true });
+      mockEachLayer([{ id: "geo-fg" }]);
       await map.addGeoHashes();
-      expect(mockLeaflet.removeLayer).toHaveBeenCalledOnce();
+      expect(mocks.map.removeLayer).toHaveBeenCalledWith("geo-fg");
       // no clear this time because the hashes are the same
-      vi.mocked(mockLeaflet.removeLayer)?.mockClear();
+      vi.mocked(mocks.map.removeLayer).mockClear();
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(
         Response.json(["db", "bc"])
       );
       void map.addGeoHashes();
-      expect(mockLeaflet.removeLayer).not.toHaveBeenCalled();
+      expect(mocks.map.removeLayer).not.toHaveBeenCalled();
     });
   });
 
@@ -182,16 +250,11 @@ describe("map", () => {
       const lat = String(Math.random());
       const lng = String(Math.random());
       const zoom = String(Math.floor(Math.random() * 20));
-      vi.mocked(mockLeaflet.getCenter)?.mockImplementation(
-        () =>
-          ({
-            lat,
-            lng,
-          } as unknown as LeafletTypes.LatLng)
-      );
-      vi.mocked(mockLeaflet.getZoom)?.mockImplementationOnce(() =>
-        parseInt(zoom)
-      );
+      vi.mocked(mocks.map.getCenter).mockImplementation(() => ({
+        lat,
+        lng,
+      }));
+      vi.mocked(mocks.map.getZoom).mockImplementationOnce(() => parseInt(zoom));
       map.updateUrlFromMap();
       expect(window.location.hash).toContain(
         `?lat=${lat}&lng=${lng}&zoom=${zoom}`
@@ -208,26 +271,27 @@ describe("map", () => {
         lng
       )}&zoom=${String(zoom)}`;
       map.updateMapFromUrl();
-      expect(mockLeaflet.setView).toHaveBeenCalledWith([lat, lng], zoom);
+      expect(mocks.map.setCenter).toHaveBeenCalledWith([lng, lat], {
+        animate: false,
+      });
     });
 
     it("returns early if no lat in url", () => {
       window.location.hash = "";
+      mocks.map.setCenter.mockClear();
       map.updateMapFromUrl();
       // USA defaults
-      expect(mockLeaflet.setView).toHaveBeenCalledWith([40, -95], 4);
+      expect(mocks.map.setCenter).not.toHaveBeenCalled();
     });
   });
 });
 
-function mockEachLayer(value: unknown) {
-  vi.mocked(mockLeaflet.eachLayer)?.mockImplementationOnce(
-    (
-      fn: (layer: LeafletTypes.Layer, context?: unknown) => void
-    ): LeafletTypes.Map => {
-      // @ts-expect-error - passing mock value that doesn't fully implement Layer
-      fn(value);
-      return undefined as unknown as LeafletTypes.Map;
-    }
-  );
+function mockEachLayer(value: unknown[]) {
+  mocks.map.getStyle.mockImplementation(() => ({
+    layers: [...value, { id: "not-geo-example" }],
+    sources: {
+      "geo-example": {},
+      "not-geo-example": {},
+    },
+  }));
 }

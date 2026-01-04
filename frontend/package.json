@@ -14,7 +14,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@types/leaflet": "^1.9.21",
     "@vitest/coverage-v8": "^4.0.16",
     "eslint": "^9.39.2",
     "happy-dom": "^20.0.11",
@@ -24,6 +23,7 @@
     "vitest": "^4.0.16"
   },
   "dependencies": {
-    "latlon-geohash": "^2.0.0"
+    "latlon-geohash": "^2.0.0",
+    "mapbox-gl": "^3.17.0"
   }
 }
