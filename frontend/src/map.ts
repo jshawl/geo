@@ -89,25 +89,45 @@ export const destroy = () => {
   }
 };
 
-export const clear = () => {
+const removeLayerOrSource = ({
+  id,
+  type,
+  hashes,
+  hashSet,
+}: {
+  id: string;
+  type: "layer" | "source";
+  hashSet: Set<string>;
+  hashes?: string[];
+}) => {
+  const hashFromId = id.replace("geo-", "").replace("-fill", "");
+  const shouldRemove =
+    id.startsWith("geo-") && (hashes ? hashSet.has(hashFromId) : true);
+  if (!shouldRemove) {
+    return;
+  }
+  if (type === "layer") {
+    map?.removeLayer(id);
+  }
+  if (type === "source") {
+    map?.removeSource(id);
+  }
+};
+
+export const clear = (hashes?: string[]) => {
   if (!map) {
     return;
   }
+  const hashSet = new Set(hashes);
 
   const style = map.getStyle();
 
   style.layers.forEach((layer) => {
-    if (layer.id.startsWith("geo-")) {
-      assert(map);
-      map.removeLayer(layer.id);
-    }
+    removeLayerOrSource({ id: layer.id, type: "layer", hashes, hashSet });
   });
 
   Object.keys(style.sources).forEach((sourceId) => {
-    assert(map);
-    if (sourceId.startsWith("geo-") && map.getSource(sourceId)) {
-      map.removeSource(sourceId);
-    }
+    removeLayerOrSource({ id: sourceId, type: "source", hashes, hashSet });
   });
 };
 
@@ -211,7 +231,16 @@ export const addRectangle = (bounds: number[][], hash: string) => {
   return `${id}-fill`;
 };
 
-let fetchedHashes = [];
+let fetchedHashes: string[] = [];
+
+const filterHashes = (incoming: string[]) => {
+  const hashSet = new Set(incoming);
+  const existingHashSet = new Set(fetchedHashes);
+  const newHashes = incoming.filter((hash) => !existingHashSet.has(hash));
+  const obsoleteHashes = fetchedHashes.filter((hash) => !hashSet.has(hash));
+  return { obsoleteHashes, newHashes };
+};
+
 export const addGeoHashes = async () => {
   const { north, east, south, west } = getBounds();
   const precision = getPrecision();
@@ -223,11 +252,10 @@ export const addGeoHashes = async () => {
   const url = `/api/geohashes?${params.toString()}`;
   const response = await fetch(url);
   const hashes = (await response.json()) as string[];
-  if (fetchedHashes.length != hashes.length) {
-    clear();
-    fetchedHashes = hashes;
-  }
-  hashes.forEach((hash) => {
+  const { obsoleteHashes, newHashes } = filterHashes(hashes);
+  clear(obsoleteHashes);
+  fetchedHashes = hashes;
+  newHashes.forEach((hash) => {
     const { ne, sw } = Geohash.bounds(hash);
     const rectId = addRectangle(
       [

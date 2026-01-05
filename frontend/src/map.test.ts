@@ -142,9 +142,10 @@ describe("map", () => {
 
     it("removes tiles", () => {
       mocks.map.removeLayer.mockClear();
-      mockEachLayer([{ id: "geo-example" }]);
+      mockEachLayer([{ id: "geo-existing" }]);
       map.clear();
       expect(mocks.map.removeLayer).toHaveBeenCalledOnce();
+      mocks.map.removeLayer.mockClear();
     });
   });
 
@@ -216,7 +217,7 @@ describe("map", () => {
       vi.stubGlobal("fetch", vi.fn());
     });
 
-    it("adds geohashes", async () => {
+    it("adds only new geohashes", async () => {
       const data: string[] = ["db"];
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
       await map.addGeoHashes();
@@ -224,24 +225,39 @@ describe("map", () => {
         "geo-db",
         expect.any(Object)
       );
+      mocks.map.addSource.mockClear();
+      mockEachLayer([{ id: "geo-db" }]);
+      vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+        Response.json(["db", "dr"])
+      );
+      await map.addGeoHashes();
+      expect(mocks.map.addSource).toHaveBeenCalledOnce();
+      expect(mocks.map.addSource).toHaveBeenCalledWith(
+        "geo-dr",
+        expect.any(Object)
+      );
+      mockEachLayer([]);
     });
 
-    it("clears existing geohashes", async () => {
+    it("clears only unfetched geohashes", async () => {
+      mockEachLayer([]);
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(["db"]));
       await map.addGeoHashes();
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(
         Response.json(["db", "bc"])
       );
-      mockEachLayer([{ id: "geo-fg" }]);
+      mockEachLayer([{ id: "geo-db-fill" }]);
       await map.addGeoHashes();
-      expect(mocks.map.removeLayer).toHaveBeenCalledWith("geo-fg");
-      // no clear this time because the hashes are the same
+      // does not remove from the first fetch
+      expect(mocks.map.removeLayer).not.toHaveBeenCalled();
       vi.mocked(mocks.map.removeLayer).mockClear();
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(
-        Response.json(["db", "bc"])
+        Response.json(["dp", "dr"])
       );
-      void map.addGeoHashes();
-      expect(mocks.map.removeLayer).not.toHaveBeenCalled();
+      mockEachLayer([{ id: "geo-db-fill" }, { id: "geo-bc-fill" }]);
+      await map.addGeoHashes();
+      expect(mocks.map.removeLayer).toHaveBeenCalledWith("geo-db-fill");
+      expect(mocks.map.removeLayer).toHaveBeenCalledWith("geo-bc-fill");
     });
   });
 
@@ -288,7 +304,7 @@ describe("map", () => {
 
 function mockEachLayer(value: unknown[]) {
   mocks.map.getStyle.mockImplementation(() => ({
-    layers: [...value, { id: "not-geo-example" }],
+    layers: value,
     sources: {
       "geo-example": {},
       "not-geo-example": {},
