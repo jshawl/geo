@@ -47,7 +47,9 @@ proc fetchData*(db: DbConn, f: DataFetcher, url: string): JsonNode =
       let event = Event(
         created_at: parse(datum["Date"].getStr(), "yyyy-MM-dd'T'HH:mm:sszzz", utc()),
         lat: datum["Latitude"].getFloat(),
-        lon: datum["Longitude"].getFloat()
+        lon: datum["Longitude"].getFloat(),
+        speed: datum["Speed(mph)"].getInt(),
+        altitude: datum["Altitude(ft)"].getInt()
       )
       insert(db, event)
       inc inserted

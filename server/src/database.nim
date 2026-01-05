@@ -9,6 +9,8 @@ type
     created_at*: DateTime
     lat*, lon*: float
     geohash: string
+    speed*: int
+    altitude*: int
 
 proc openDb*(dir: string): DbConn =
   open(dir & "app.db", "", "", "")
@@ -21,6 +23,8 @@ proc setupDb*(dir: string): DbConn =
       lat REAL NOT NULL,
       lon REAL NOT NULL,
       geohash TEXT NOT NULL,
+      speed INTEGER NOT NULL DEFAULT 0,
+      altitude INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL UNIQUE
     );
     CREATE INDEX IF NOT EXISTS idx_events_geohash ON events(geohash);
@@ -31,22 +35,24 @@ proc setupDb*(dir: string): DbConn =
 proc insert*(db: DbConn, event: Event) =
   let hash = encode(event.lat, event.lon)
   db.exec(
-    sql"INSERT INTO events (created_at, lat, lon, geohash) VALUES (?, ?, ?, ?)",
+    sql"INSERT INTO events (created_at, lat, lon, geohash, speed, altitude) VALUES (?, ?, ?, ?, ?, ?)",
     event.created_at.format("yyyy-MM-dd'T'HH:mm:ss'.'fff'Z'"),
     event.lat,
     event.lon,
-    hash
+    hash,
+    event.speed,
+    event.altitude
   )
 
 proc findMultiple*(db: DbConn): seq[Row] =
-  let q = sql"SELECT created_at, lat, lon, geohash from events;"
+  let q = sql"SELECT created_at, lat, lon, geohash, speed, altitude from events;"
   db.getAllRows(q)
 
 proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Event] =
   if dateFrom.len == 0 or dateTo.len == 0:
     return result
   let q = sql"""
-    SELECT created_at, lat, lon, geohash
+    SELECT created_at, lat, lon, geohash, speed, altitude
     FROM events
     WHERE created_at BETWEEN ? AND ? LIMIT 1000;
   """
@@ -55,12 +61,14 @@ proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Even
       created_at: parse(row[0], "yyyy-MM-dd'T'HH':'mm':'ss'.'fff'Z'"),
       lat: parseFloat(row[1]),
       lon: parseFloat(row[2]),
-      geohash: row[3]
+      geohash: row[3],
+      speed: parseInt(row[4]),
+      altitude: parseInt(row[5])
     )
 
 proc findMultipleEvents*(db: DbConn, geohash: string): seq[Event] =
   let q = sql"""
-    SELECT created_at, lat, lon, geohash
+    SELECT created_at, lat, lon, geohash, speed, altitude
     FROM events
     WHERE geohash LIKE ? LIMIT 1000;
   """
@@ -71,6 +79,8 @@ proc findMultipleEvents*(db: DbConn, geohash: string): seq[Event] =
       lat: parseFloat(row[1]),
       lon: parseFloat(row[2]),
       geohash: row[3],
+      speed: parseInt(row[4]),
+      altitude: parseInt(row[5])
     )
 
 type YearlyCount = object
