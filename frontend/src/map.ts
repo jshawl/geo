@@ -1,7 +1,7 @@
 import "./map.css";
 import Geohash from "latlon-geohash";
-import type * as LeafletTypes from "leaflet";
 import { assert } from "./utils";
+import mapboxgl from "mapbox-gl";
 
 export interface Event {
   created_at?: string;
@@ -10,47 +10,75 @@ export interface Event {
   lon: number;
 }
 
-let map: LeafletTypes.Map | undefined;
+let map: mapboxgl.Map | undefined;
 
 export const render = (events: Event[], options?: { polyline: boolean }) => {
-  map ??= window.L.map("map");
-  window.L.tileLayer(
-    "https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}",
-    {
-      attribution:
-        'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-      id: "mapbox/streets-v11",
-      accessToken:
-        "pk.eyJ1IjoiYW1ibGVhcHAiLCJhIjoiY2s1MXFlc2tmMDBudTNtcDhwYTNlMXF6NCJ9.5sCbcBl56vskuJ2o_e27uQ",
-    } as L.TileLayerOptions
-  ).addTo(map);
-  map.setView([40, -95], 4);
+  mapboxgl.accessToken =
+    "pk.eyJ1IjoiYW1ibGVhcHAiLCJhIjoiY2s1MXFlc2tmMDBudTNtcDhwYTNlMXF6NCJ9.5sCbcBl56vskuJ2o_e27uQ";
+  map = new mapboxgl.Map({
+    container: "map", // container ID
+    style: "mapbox://styles/mapbox/outdoors-v12", // style URL
+    center: [-95, 40], // starting position [lng, lat]
+    zoom: 4, // starting zoom
+  });
+  map.addControl(new mapboxgl.NavigationControl());
   if (events.length) {
     if (options?.polyline === false) {
-      const markers = window.L.featureGroup().addTo(map);
+      const bounds = new mapboxgl.LngLatBounds();
       events.map((event) => {
+        bounds.extend([event.lon, event.lat]);
         const ts = event.created_at?.slice(0, 10);
         assert(ts);
         assert(event.geohash);
-        window.L.marker([event.lat, event.lon])
-          .addTo(markers)
-          .bindPopup(`<a href='/#/${ts}'>${ts}</a> - ${event.geohash}`);
+        assert(map);
+        new mapboxgl.Marker()
+          .setLngLat([event.lon, event.lat])
+          .setPopup(
+            new mapboxgl.Popup().setHTML(
+              `<a href='/#/${ts}'>${ts}</a> - ${event.geohash}`
+            )
+          )
+          .addTo(map);
       });
-      map.fitBounds(markers.getBounds());
+      map.fitBounds(bounds, {
+        padding: 50,
+        animate: false,
+      });
       return;
     }
-    const pointList = events.map(
-      (event) => new window.L.LatLng(event.lat, event.lon)
-    );
-    const polyline = new window.L.Polyline(pointList, {
-      color: "blue",
-      weight: 5,
-      opacity: 0.5,
-      smoothFactor: 5,
-    });
 
-    polyline.addTo(map);
-    map.fitBounds(polyline.getBounds());
+    map.on("load", () => {
+      const bounds = new mapboxgl.LngLatBounds();
+      const polylineCoordinates = events.map((event) => {
+        bounds.extend([event.lon, event.lat]);
+        return [event.lon, event.lat];
+      });
+      assert(map);
+      map.addSource("polyline", {
+        type: "geojson",
+        data: {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: polylineCoordinates,
+          },
+          properties: {},
+        },
+      });
+      map.addLayer({
+        id: "polyline",
+        type: "line",
+        source: "polyline",
+        paint: {
+          "line-color": "#0000ff",
+          "line-width": 3,
+        },
+      });
+      map.fitBounds(bounds, {
+        padding: 50,
+        animate: false,
+      });
+    });
   }
 };
 
@@ -61,25 +89,56 @@ export const destroy = () => {
   }
 };
 
-export const clear = () => {
-  map?.eachLayer((layer) => {
-    // @ts-expect-error _path is a private property 🙈
-    if (layer._path != undefined) {
-      map?.removeLayer(layer);
-    }
+const removeLayerOrSource = ({
+  id,
+  type,
+  hashes,
+  hashSet,
+}: {
+  id: string;
+  type: "layer" | "source";
+  hashSet: Set<string>;
+  hashes?: string[];
+}) => {
+  const hashFromId = id.replace("geo-", "").replace("-fill", "");
+  const shouldRemove =
+    id.startsWith("geo-") && (hashes ? hashSet.has(hashFromId) : true);
+  if (!shouldRemove) {
+    return;
+  }
+  if (type === "layer") {
+    map?.removeLayer(id);
+  }
+  if (type === "source") {
+    map?.removeSource(id);
+  }
+};
+
+export const clear = (hashes?: string[]) => {
+  if (!map) {
+    return;
+  }
+  const hashSet = new Set(hashes);
+
+  const style = map.getStyle();
+
+  style.layers.forEach((layer) => {
+    removeLayerOrSource({ id: layer.id, type: "layer", hashes, hashSet });
+  });
+
+  Object.keys(style.sources).forEach((sourceId) => {
+    removeLayerOrSource({ id: sourceId, type: "source", hashes, hashSet });
   });
 };
 
-export const addEventListener = (
-  event: string,
-  callback: LeafletTypes.LeafletEventHandlerFn
-) => {
+export const addEventListener = (event: string, callback: () => void) => {
   map?.on(event, callback);
 };
 
 export const getBounds = () => {
   assert(map);
   const bounds = map.getBounds();
+  assert(bounds);
   const north = bounds.getNorthEast().lat;
   const east = bounds.getNorthEast().lng;
   const south = bounds.getSouthWest().lat;
@@ -89,7 +148,7 @@ export const getBounds = () => {
 
 export const getZoom = () => {
   assert(map);
-  return map.getZoom();
+  return Math.floor(map.getZoom());
 };
 
 export const getCenter = () => {
@@ -97,12 +156,23 @@ export const getCenter = () => {
   return map.getCenter();
 };
 
-export const setView = (coords: LeafletTypes.LatLngExpression, zoom: number) =>
-  map?.setView(coords, zoom);
+export const setView = ({
+  lon,
+  lat,
+  zoom,
+}: {
+  lon: number;
+  lat: number;
+  zoom: number;
+}) => {
+  assert(map);
+  map.setCenter([lon, lat], { animate: false });
+  map.setZoom(zoom, { animate: false });
+};
 
 export const getPrecision = () => {
   assert(map);
-  switch (map.getZoom()) {
+  switch (getZoom()) {
     case 0:
     case 1:
     case 2:
@@ -135,17 +205,42 @@ export const getPrecision = () => {
   }
 };
 
-export const addRectangle = (bounds: LeafletTypes.LatLngBoundsExpression) => {
+export const addRectangle = (bounds: number[][], hash: string) => {
   assert(map);
-  return window.L.rectangle(bounds, {
-    color: "#000",
-    weight: 1,
-    fillOpacity: 0.3,
-    stroke: true,
-  }).addTo(map);
+  const id = `geo-${hash}`;
+  map.addSource(id, {
+    type: "geojson",
+    data: {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [bounds],
+      },
+      properties: {},
+    },
+  });
+  map.addLayer({
+    id: `${id}-fill`,
+    type: "fill",
+    source: id,
+    paint: {
+      "fill-color": "#ff00ea",
+      "fill-opacity": 0.5,
+    },
+  });
+  return `${id}-fill`;
 };
 
-let fetchedHashes = [];
+let fetchedHashes: string[] = [];
+
+const filterHashes = (incoming: string[]) => {
+  const hashSet = new Set(incoming);
+  const existingHashSet = new Set(fetchedHashes);
+  const newHashes = incoming.filter((hash) => !existingHashSet.has(hash));
+  const obsoleteHashes = fetchedHashes.filter((hash) => !hashSet.has(hash));
+  return { obsoleteHashes, newHashes };
+};
+
 export const addGeoHashes = async () => {
   const { north, east, south, west } = getBounds();
   const precision = getPrecision();
@@ -157,17 +252,34 @@ export const addGeoHashes = async () => {
   const url = `/api/geohashes?${params.toString()}`;
   const response = await fetch(url);
   const hashes = (await response.json()) as string[];
-  if (fetchedHashes.length != hashes.length) {
-    clear();
-    fetchedHashes = hashes;
-  }
-  hashes.forEach((hash) => {
+  const { obsoleteHashes, newHashes } = filterHashes(hashes);
+  clear(obsoleteHashes);
+  fetchedHashes = hashes;
+  newHashes.forEach((hash) => {
     const { ne, sw } = Geohash.bounds(hash);
-    const rect = addRectangle([
-      [ne.lat, ne.lon],
-      [sw.lat, sw.lon],
-    ]);
-    rect.bindPopup(`<a href="/#/${hash}">${hash}</a>`);
+    const rectId = addRectangle(
+      [
+        [sw.lon, sw.lat],
+        [sw.lon, ne.lat],
+        [ne.lon, ne.lat],
+        [ne.lon, sw.lat],
+        [sw.lon, sw.lat],
+      ],
+      hash
+    );
+    new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+    });
+    assert(map);
+    map.on("click", rectId, (e) => {
+      const coordinates = e.lngLat;
+      assert(map);
+      new mapboxgl.Popup()
+        .setLngLat(coordinates)
+        .setHTML(`<a href="/#/${hash}">${hash}</a>`)
+        .addTo(map);
+    });
   });
 };
 
@@ -195,5 +307,5 @@ export const updateMapFromUrl = () => {
     assert(typeof value === "string");
     return parseFloat(value);
   });
-  setView([lat, lon], zoom);
+  setView({ lon, lat, zoom });
 };
