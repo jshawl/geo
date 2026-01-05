@@ -4,7 +4,17 @@
       "Date": "2025-11-04T07:14:27-05:00",
       "Latitude": 1.234,
       "Longitude": 5.678,
-      "Speed(mph)": 0,
+      "Speed(mph)": 60,
+      "Altitude(ft)": 5337,
+      "Direction": 1,
+      "Accuracy": 1
+    },
+    {
+      "Date": "2025-11-05T07:14:27-05:00",
+      "Latitude": 1.234,
+      "Longitude": 5.678,
+      "Speed(mph)": null,
+      "Altitude(ft)": null,
       "Direction": 1,
       "Accuracy": 1
     }

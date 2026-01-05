@@ -19,7 +19,7 @@ suite "worker":
   test "fetchData inserts values":
     check db.findMultiple().len == 0
     discard fetchData(db, fetcher, "https://example.com/")
-    check db.findMultiple().len == 1
+    check db.findMultiple().len == 2
 
   test "fetchData does not insert duplicate values":
     check db.findMultiple().len == 0
@@ -27,12 +27,17 @@ suite "worker":
     discard fetchData(db, fetcher, "https://example.com/")
     discard fetchData(db, fetcher, "https://example.com/")
     let results = db.findMultiple()
-    check results.len == 1
+    check results.len == 2
     # converted to utc
     check results[0][0] == "2025-11-04T12:14:27.000Z"
     check parseFloat(results[0][1]) == 1.234
     check parseFloat(results[0][2]) == 5.678
     check results[0][3] == "s0hp10wsdfr8"
+    check parseInt(results[0][4]) == 60
+    check parseInt(results[0][5]) == 5337
+    # null is converted to 0
+    check parseInt(results[1][4]) == 0
+    check parseInt(results[1][5]) == 0
 
   test "fetchData doesn't throw":
     let mockGet500 = proc (url: string): string =

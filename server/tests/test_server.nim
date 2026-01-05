@@ -11,7 +11,9 @@ suite "server":
         db.insert(Event(
             created_at: parse("2000-01-01T00:00:00-05:00", "yyyy-MM-dd'T'HH:mm:sszzz", utc()),
             lat: 1.23456,
-            lon: 4.56789
+            lon: 4.56789,
+            speed: 60,
+            altitude: 5337
         ))
     teardown:
         removeDir(tmpDir)
@@ -56,6 +58,8 @@ suite "server":
            "created_at": "2000-01-01T05:00:00+00:00",
            "lat": 1.23456,
            "lon": 4.56789,
-           "geohash": "s05ppbwpzd9t"
+           "geohash": "s05ppbwpzd9t",
+           "speed": 60,
+           "altitude": 5337
         }]
         check body == data
