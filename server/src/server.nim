@@ -36,6 +36,9 @@ proc handleRequest*(db: DbConn, path: string, queryParams: Table[string, string]
       else:
         db.findMultipleEvents(queryParams["from"], queryParams["to"])
       return (Http200, %* events)
+    of "/api/altitudes":
+      let altitudes = db.findAltitudes()
+      return (Http200, %* altitudes)
     else:
       return (Http404, %* "Not found")
   except CatchableError as e:

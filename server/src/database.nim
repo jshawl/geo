@@ -48,6 +48,9 @@ proc findMultiple*(db: DbConn): seq[Row] =
   let q = sql"SELECT created_at, lat, lon, geohash, speed, altitude from events;"
   db.getAllRows(q)
 
+proc toDateTime(str: string): DateTime =
+  parse(str, "yyyy-MM-dd'T'HH':'mm':'ss'.'fff'Z'")
+
 proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Event] =
   if dateFrom.len == 0 or dateTo.len == 0:
     return result
@@ -58,7 +61,7 @@ proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Even
   """
   for row in db.rows(q, dateFrom, dateTo):
     result.add Event(
-      created_at: parse(row[0], "yyyy-MM-dd'T'HH':'mm':'ss'.'fff'Z'"),
+      created_at: toDateTime(row[0]),
       lat: parseFloat(row[1]),
       lon: parseFloat(row[2]),
       geohash: row[3],
@@ -75,7 +78,7 @@ proc findMultipleEvents*(db: DbConn, geohash: string): seq[Event] =
 
   for row in db.rows(q, geohash & "%"):
     result.add Event(
-      created_at: parse(row[0], "yyyy-MM-dd'T'HH':'mm':'ss'.'fff'Z'"),
+      created_at: toDateTime(row[0]),
       lat: parseFloat(row[1]),
       lon: parseFloat(row[2]),
       geohash: row[3],
@@ -121,6 +124,39 @@ proc findGeoHashes*(db: DbConn, north, east, south, west: float, precision: int)
   let rows = db.getAllRows(q, params)
   for row in rows:
     result.add row
+
+type Altitude = object
+  id: int
+  altitude: int
+  created_at: DateTime
+
+proc findAltitudes*(db: DbConn): seq[Altitude] =
+  let q = sql"""
+    SELECT
+        id,
+        altitude,
+        created_at
+    FROM (
+        SELECT
+            *,
+            ROW_NUMBER() OVER (
+                PARTITION BY DATE(created_at)
+                ORDER BY altitude DESC
+            ) as rn
+        FROM events
+        WHERE altitude > 0
+    )
+    WHERE rn = 1
+    ORDER BY altitude DESC
+    LIMIT 5;
+  """
+  let rows = db.getAllRows(q)
+  for row in rows:
+    result.add Altitude(
+      id: parseInt(row[0]),
+      altitude: parseInt(row[1]),
+      created_at: toDateTime(row[2])
+    )
 
 proc `%`*(dt: DateTime): JsonNode =
   result = % $dt
