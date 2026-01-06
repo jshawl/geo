@@ -143,7 +143,7 @@ describe("view", () => {
       });
 
       it("fetches data and renders a list of events and the map", async () => {
-        const data: map.Event[] = [{ lat: 1.23, lon: 4.56 }];
+        const data: map.Event[] = [{ id: 1, lat: 1.23, lon: 4.56 }];
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
         await render({ view, year, month, day, geohash });
 

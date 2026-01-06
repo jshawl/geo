@@ -93,7 +93,7 @@ vi.mock("mapbox-gl", () => ({
 describe("map", () => {
   beforeEach(() => {
     map.destroy();
-    map.render([{ lat: 1.23, lon: 4.56 }]);
+    map.render([{ id: 1, lat: 1.23, lon: 4.56 }]);
   });
 
   describe("render", () => {
@@ -107,7 +107,15 @@ describe("map", () => {
     it("polyline: false", () => {
       mocks.map.addSource.mockClear();
       map.render(
-        [{ lat: 1.23, lon: 4.56, created_at: "2025-12-20", geohash: "abc" }],
+        [
+          {
+            id: 1,
+            lat: 1.23,
+            lon: 4.56,
+            created_at: "2025-12-20",
+            geohash: "abc",
+          },
+        ],
         {
           polyline: false,
         }
