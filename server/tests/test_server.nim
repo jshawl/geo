@@ -55,6 +55,7 @@ suite "server":
         let (code, body) = handleRequest(db, "/api", {"from": "2000-01-01", "to": "2000-01-02"}.toTable)
         check code == Http200
         let data = %*[{
+            "id": 1,
             "created_at": "2000-01-01T05:00:00+00:00",
             "lat": 1.23456,
             "lon": 4.56789,

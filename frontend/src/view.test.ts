@@ -49,7 +49,7 @@ describe("view", () => {
 
     describe("render day", () => {
       it("fetches data and renders the map", async () => {
-        const data: map.Event[] = [{ lat: 1.23, lon: 4.56 }];
+        const data: map.Event[] = [{ id: 1, lat: 1.23, lon: 4.56 }];
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
         vi.stubEnv("TZ", "UTC");
         await render({ view, year, month, day, geohash });
@@ -57,7 +57,7 @@ describe("view", () => {
           "/api?from=2025-12-20T00:00:00.000Z&to=2025-12-21T00:00:00.000Z"
         );
         expect(map.render).toHaveBeenCalledOnce();
-        expect(map.render).toHaveBeenCalledWith(data);
+        expect(map.render).toHaveBeenCalledWith(data, { polyline: true });
       });
 
       it("handles no events", async () => {
@@ -143,7 +143,7 @@ describe("view", () => {
       });
 
       it("fetches data and renders a list of events and the map", async () => {
-        const data: map.Event[] = [{ lat: 1.23, lon: 4.56 }];
+        const data: map.Event[] = [{ id: 1, lat: 1.23, lon: 4.56 }];
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
         await render({ view, year, month, day, geohash });
 

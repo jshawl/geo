@@ -39,7 +39,9 @@ const renderDay = async ({
   const response = await fetch(url);
   const data = (await response.json()) as map.Event[];
   if (data.length > 0) {
-    map.render(data);
+    map.render(data, {
+      polyline: !location.hash.includes("polyline=false"),
+    });
   } else {
     view.innerHTML += "No events found.";
   }
