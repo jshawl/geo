@@ -8,6 +8,7 @@ export interface Event {
   geohash?: string;
   lat: number;
   lon: number;
+  id: number;
 }
 
 let map: mapboxgl.Map | undefined;
@@ -35,7 +36,9 @@ export const render = (events: Event[], options?: { polyline: boolean }) => {
           .setLngLat([event.lon, event.lat])
           .setPopup(
             new mapboxgl.Popup().setHTML(
-              `<a href='/#/${ts}'>${ts}</a> - ${event.geohash}`
+              `<p><a href='/#/${ts}'>${ts}</a> - ${event.geohash} - ${String(
+                event.id
+              )}</p>`
             )
           )
           .addTo(map);

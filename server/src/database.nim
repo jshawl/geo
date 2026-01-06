@@ -6,6 +6,7 @@ export DbConn
 
 type
   Event* = object
+    id: int
     created_at*: DateTime
     lat*, lon*: float
     geohash: string
@@ -55,18 +56,19 @@ proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Even
   if dateFrom.len == 0 or dateTo.len == 0:
     return result
   let q = sql"""
-    SELECT created_at, lat, lon, geohash, speed, altitude
+    SELECT id, created_at, lat, lon, geohash, speed, altitude
     FROM events
     WHERE created_at BETWEEN ? AND ? LIMIT 1000;
   """
   for row in db.rows(q, dateFrom, dateTo):
     result.add Event(
-      created_at: toDateTime(row[0]),
-      lat: parseFloat(row[1]),
-      lon: parseFloat(row[2]),
-      geohash: row[3],
-      speed: parseInt(row[4]),
-      altitude: parseInt(row[5])
+      id: parseInt(row[0]),
+      created_at: toDateTime(row[1]),
+      lat: parseFloat(row[2]),
+      lon: parseFloat(row[3]),
+      geohash: row[4],
+      speed: parseInt(row[5]),
+      altitude: parseInt(row[6])
     )
 
 proc findMultipleEvents*(db: DbConn, geohash: string): seq[Event] =
