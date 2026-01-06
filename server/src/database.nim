@@ -73,19 +73,20 @@ proc findMultipleEvents*(db: DbConn, dateFrom: string, dateTo: string): seq[Even
 
 proc findMultipleEvents*(db: DbConn, geohash: string): seq[Event] =
   let q = sql"""
-    SELECT created_at, lat, lon, geohash, speed, altitude
+    SELECT id, created_at, lat, lon, geohash, speed, altitude
     FROM events
     WHERE geohash LIKE ? LIMIT 1000;
   """
 
   for row in db.rows(q, geohash & "%"):
     result.add Event(
-      created_at: toDateTime(row[0]),
-      lat: parseFloat(row[1]),
-      lon: parseFloat(row[2]),
-      geohash: row[3],
-      speed: parseInt(row[4]),
-      altitude: parseInt(row[5])
+      id: parseInt(row[0]),
+      created_at: toDateTime(row[1]),
+      lat: parseFloat(row[2]),
+      lon: parseFloat(row[3]),
+      geohash: row[4],
+      speed: parseInt(row[5]),
+      altitude: parseInt(row[6])
     )
 
 type YearlyCount = object
@@ -150,7 +151,7 @@ proc findAltitudes*(db: DbConn): seq[Altitude] =
     )
     WHERE rn = 1
     ORDER BY altitude DESC
-    LIMIT 5;
+    LIMIT 15;
   """
   let rows = db.getAllRows(q)
   for row in rows:
