@@ -55,11 +55,20 @@ suite "server":
         let (code, body) = handleRequest(db, "/api", {"from": "2000-01-01", "to": "2000-01-02"}.toTable)
         check code == Http200
         let data = %*[{
-           "created_at": "2000-01-01T05:00:00+00:00",
-           "lat": 1.23456,
-           "lon": 4.56789,
-           "geohash": "s05ppbwpzd9t",
-           "speed": 60,
-           "altitude": 5337
+            "created_at": "2000-01-01T05:00:00+00:00",
+            "lat": 1.23456,
+            "lon": 4.56789,
+            "geohash": "s05ppbwpzd9t",
+            "speed": 60,
+            "altitude": 5337
+        }]
+        check body == data
+    test "/api/altitudes":
+        let (code, body) = handleRequest(db, "/api/altitudes", initTable[string, string]())
+        check code == Http200
+        let data = %*[{
+            "id": 1,
+            "created_at": "2000-01-01T05:00:00+00:00",
+            "altitude": 5337
         }]
         check body == data
