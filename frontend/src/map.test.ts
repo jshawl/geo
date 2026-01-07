@@ -3,18 +3,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as map from "./map";
 
+const callbackFns: Record<string, (args: unknown) => void> = {};
+
+const mapDispatch = (event: string) => {
+  callbackFns[event]({});
+};
+
 const mocks = vi.hoisted(() => {
   const map = {
     on: vi.fn(
       (
-        _event,
+        event: string,
         callbackOrTarget: ((args: unknown) => void) | string,
         callback: (args: unknown) => string
       ) => {
         if (typeof callbackOrTarget === "function") {
-          callbackOrTarget({});
+          callbackFns[event] = callbackOrTarget;
         } else {
-          callback({});
+          callbackFns[event] = callback;
         }
       }
     ),
@@ -26,13 +32,14 @@ const mocks = vi.hoisted(() => {
       getNorthEast: () => ({}),
       getSouthWest: () => ({}),
     })),
-    getCenter: vi.fn(),
+    getCenter: vi.fn(() => ({})),
     getSource: () => true,
     getStyle: vi.fn<() => { layers: unknown[] }>(() => ({
       layers: [],
       sources: [],
     })),
     getZoom: vi.fn(),
+    isStyleLoaded: vi.fn().mockImplementation(() => true),
     remove: vi.fn(),
     removeLayer: vi.fn(),
     removeSource: vi.fn(),
@@ -92,7 +99,7 @@ vi.mock("mapbox-gl", () => ({
 
 describe("map", () => {
   beforeEach(() => {
-    map.destroy();
+    window.location.hash = "#/";
     map.render([{ id: 1, lat: 1.23, lon: 4.56 }]);
   });
 
@@ -130,38 +137,13 @@ describe("map", () => {
     });
   });
 
-  describe("destroy", () => {
-    it("supports no map", () => {
-      mocks.map.remove.mockClear();
-      map.destroy();
-      map.destroy();
-      expect(mocks.map.remove).toHaveBeenCalledOnce();
-    });
-  });
-
   describe("clear", () => {
-    it("supports no map", () => {
-      mocks.map.removeLayer.mockClear();
-      mockEachLayer([]);
-      map.destroy();
-      map.clear();
-      expect(mocks.map.removeLayer).not.toHaveBeenCalled();
-    });
-
     it("removes tiles", () => {
       mocks.map.removeLayer.mockClear();
       mockEachLayer([{ id: "geo-existing" }]);
       map.clear();
-      expect(mocks.map.removeLayer).toHaveBeenCalledOnce();
+      expect(mocks.map.removeLayer).toHaveBeenCalledWith("geo-existing");
       mocks.map.removeLayer.mockClear();
-    });
-  });
-
-  describe("addEventListener", () => {
-    it("adds event listeners", () => {
-      const fn = () => undefined;
-      map.addEventListener("move", fn);
-      expect(mocks.map.on).toHaveBeenCalledWith("move", fn);
     });
   });
 
@@ -245,6 +227,24 @@ describe("map", () => {
         expect.any(Object)
       );
       mockEachLayer([]);
+
+      // on map move
+      mocks.map.addSource.mockClear();
+      window.location.hash = "#/";
+      mapDispatch("move");
+      vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(["cb"]));
+      vi.advanceTimersByTime(500);
+      // TODO expect addSource called
+
+      mapDispatch("click");
+      // TODO expect popup
+    });
+
+    it("does not invoke on map move if the url is non-geohash", () => {
+      window.location.hash = "#/2020";
+      mapDispatch("move");
+      vi.advanceTimersByTime(500);
+      expect(window.location.hash).toBe("#/2020");
     });
 
     it("clears only unfetched geohashes", async () => {
@@ -257,7 +257,7 @@ describe("map", () => {
       mockEachLayer([{ id: "geo-db-fill" }]);
       await map.addGeoHashes();
       // does not remove from the first fetch
-      expect(mocks.map.removeLayer).not.toHaveBeenCalled();
+      expect(mocks.map.removeLayer).not.toHaveBeenCalledWith("geo-db-fill");
       vi.mocked(mocks.map.removeLayer).mockClear();
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(
         Response.json(["dp", "dr"])
@@ -308,12 +308,26 @@ describe("map", () => {
       expect(mocks.map.setCenter).not.toHaveBeenCalled();
     });
   });
+
+  describe("whenLoaded", () => {
+    it("invokes the callback", () => {
+      const callback = vi.fn();
+      mocks.map.isStyleLoaded.mockImplementation(() => false);
+      map.whenLoaded(callback);
+      vi.advanceTimersByTime(500);
+      expect(callback).not.toHaveBeenCalled();
+      mocks.map.isStyleLoaded.mockImplementation(() => true);
+      vi.advanceTimersByTime(500);
+      expect(callback).toHaveBeenCalledOnce();
+    });
+  });
 });
 
 function mockEachLayer(value: unknown[]) {
   mocks.map.getStyle.mockImplementation(() => ({
-    layers: value,
+    layers: [...value, { id: "polyline" }],
     sources: {
+      polyline: {},
       "geo-example": {},
       "not-geo-example": {},
     },

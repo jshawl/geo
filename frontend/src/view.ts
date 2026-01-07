@@ -1,4 +1,4 @@
-import { assert, debounce } from "./utils";
+import { assert } from "./utils";
 import * as map from "./map";
 
 export type Count<T extends "year" | "month" | "day"> = Record<T, string> & {
@@ -83,13 +83,10 @@ const renderYear = async ({ view, year }: ViewProps<"year">) => {
 
 const renderYears = async ({ view }: ViewProps<never>) => {
   map.render([]);
-  map.updateMapFromUrl();
-  void map.addGeoHashes();
-  map.addEventListener("move", () => {
-    debounce(() => {
-      map.updateUrlFromMap();
-      void map.addGeoHashes();
-    });
+  // TODO map should reset center and zoom
+  map.whenLoaded(() => {
+    map.updateMapFromUrl();
+    void map.addGeoHashes();
   });
   view.innerHTML = breadcrumbs([]);
   const url = `/api/years`;

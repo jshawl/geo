@@ -11,6 +11,9 @@ vi.mock("./map", () => ({
   addEventListener: (_type: string, fn: () => void) => {
     fn();
   },
+  whenLoaded: (callback: () => void) => {
+    callback();
+  },
 }));
 
 describe("view", () => {
@@ -128,9 +131,6 @@ describe("view", () => {
           '<li><a href="/#/2025">2025</a> - 42</li>'
         );
         expect(map.addGeoHashes).toHaveBeenCalledOnce();
-        // addEventListener move is invoked automatically in mock
-        vi.advanceTimersByTime(500);
-        expect(map.addGeoHashes).toHaveBeenCalledTimes(2);
       });
     });
 
