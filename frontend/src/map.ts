@@ -12,8 +12,10 @@ export interface Event {
 }
 
 let map: mapboxgl.Map | undefined;
+let fetchedHashes: string[] = [];
 
 export const render = (events: Event[], options?: { polyline: boolean }) => {
+  fetchedHashes = [];
   mapboxgl.accessToken =
     "pk.eyJ1IjoiYW1ibGVhcHAiLCJhIjoiY2s1MXFlc2tmMDBudTNtcDhwYTNlMXF6NCJ9.5sCbcBl56vskuJ2o_e27uQ";
   map = new mapboxgl.Map({
@@ -233,8 +235,6 @@ export const addRectangle = (bounds: number[][], hash: string) => {
   });
   return `${id}-fill`;
 };
-
-let fetchedHashes: string[] = [];
 
 const filterHashes = (incoming: string[]) => {
   const hashSet = new Set(incoming);
