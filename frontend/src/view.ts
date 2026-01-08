@@ -47,7 +47,7 @@ const renderDay = async ({
   }
 };
 
-const renderMonth = async ({
+const renderDays = async ({
   view,
   year,
   month,
@@ -66,7 +66,7 @@ const renderMonth = async ({
     </ul>`;
 };
 
-const renderYear = async ({ view, year }: ViewProps<"year">) => {
+const renderMonths = async ({ view, year }: ViewProps<"year">) => {
   view.innerHTML = breadcrumbs([year]);
   const url = `/api/months?year=${year}`;
   const response = await fetch(url);
@@ -82,8 +82,7 @@ const renderYear = async ({ view, year }: ViewProps<"year">) => {
 };
 
 const renderYears = async ({ view }: ViewProps<never>) => {
-  map.render([]);
-  // TODO map should reset center and zoom
+  map.setView({ lon: -95, lat: 40, zoom: 4 });
   map.whenLoaded(() => {
     map.updateMapFromUrl();
     void map.addGeoHashes();
@@ -122,16 +121,17 @@ export const render = async ({
   day,
   geohash,
 }: ViewProps<"year" | "month" | "day" | "geohash">) => {
+  map.render([]);
   if (year && month && day) {
     return renderDay({ view, year, month, day });
   }
 
   if (year && month) {
-    return renderMonth({ view, year, month });
+    return renderDays({ view, year, month });
   }
 
   if (year) {
-    return renderYear({ view, year });
+    return renderMonths({ view, year });
   }
 
   if (geohash) {

@@ -54,11 +54,14 @@ const mocks = vi.hoisted(() => {
     }
   }
 
+  const popupSetHTML = vi.fn();
+
   class MockPopup {
     addTo() {
       // pass
     }
-    setHTML() {
+    setHTML(args: unknown) {
+      popupSetHTML(args);
       return this;
     }
     setLngLat() {
@@ -84,7 +87,14 @@ const mocks = vi.hoisted(() => {
     }
   }
 
-  return { MockMap, map, MockPopup, MockLngLatBounds, MockMarker };
+  return {
+    MockMap,
+    map,
+    MockPopup,
+    MockLngLatBounds,
+    MockMarker,
+    popupSetHTML,
+  };
 });
 
 vi.mock("mapbox-gl", () => ({
@@ -231,13 +241,20 @@ describe("map", () => {
       // on map move
       mocks.map.addSource.mockClear();
       window.location.hash = "#/";
-      mapDispatch("move");
       vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(["cb"]));
+      mapDispatch("move");
       vi.advanceTimersByTime(500);
-      // TODO expect addSource called
+      await vi.waitFor(() => {
+        expect(mocks.map.addSource).toHaveBeenCalled();
+      });
+      expect(mocks.map.addSource).toHaveBeenCalledWith(
+        "geo-cb",
+        expect.any(Object)
+      );
 
+      mocks.popupSetHTML.mockClear();
       mapDispatch("click");
-      // TODO expect popup
+      expect(mocks.popupSetHTML).toHaveBeenCalledWith('<a href="/#/cb">cb</a>');
     });
 
     it("does not invoke on map move if the url is non-geohash", () => {
