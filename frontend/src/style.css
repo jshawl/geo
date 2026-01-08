@@ -13,6 +13,12 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -28,7 +34,6 @@ body {
   flex-direction: column;
   min-width: 320px;
   min-height: 100vh;
-  padding: 1rem;
 }
 
 h1 {
@@ -50,6 +55,13 @@ ul {
 #app {
   max-width: 1280px;
   margin: 0;
+  position: absolute;
+  background: #fff;
+  padding: 0.75rem;
+  top: 0.75rem;
+  left: 0.75rem;
+  border-radius: 0.25rem;
+  box-shadow: 0 0 0 2px #0000001a;
 }
 
 .logo {
