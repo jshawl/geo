@@ -109,6 +109,7 @@ vi.mock("mapbox-gl", () => ({
 
 describe("map", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     window.location.hash = "#/";
     map.render([{ id: 1, lat: 1.23, lon: 4.56 }]);
   });

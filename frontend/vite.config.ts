@@ -16,6 +16,5 @@ export default defineConfig({
     sequence: {
       shuffle: true,
     },
-    setupFiles: ["./vitest.setup.ts"],
   },
 });
