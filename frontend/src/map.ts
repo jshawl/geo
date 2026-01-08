@@ -1,6 +1,6 @@
 import "./map.css";
 import Geohash from "latlon-geohash";
-import { assert } from "./utils";
+import { assert, debounce } from "./utils";
 import mapboxgl from "mapbox-gl";
 
 export interface Event {
@@ -14,8 +14,10 @@ export interface Event {
 let map: mapboxgl.Map | undefined;
 let fetchedHashes: string[] = [];
 
-export const render = (events: Event[], options?: { polyline: boolean }) => {
-  fetchedHashes = [];
+const getMap = () => {
+  if (map) {
+    return map;
+  }
   mapboxgl.accessToken =
     "pk.eyJ1IjoiYW1ibGVhcHAiLCJhIjoiY2s1MXFlc2tmMDBudTNtcDhwYTNlMXF6NCJ9.5sCbcBl56vskuJ2o_e27uQ";
   map = new mapboxgl.Map({
@@ -25,34 +27,58 @@ export const render = (events: Event[], options?: { polyline: boolean }) => {
     zoom: 4, // starting zoom
   });
   map.addControl(new mapboxgl.NavigationControl());
-  if (events.length) {
-    if (options?.polyline === false) {
-      const bounds = new mapboxgl.LngLatBounds();
-      events.map((event) => {
-        bounds.extend([event.lon, event.lat]);
-        const ts = event.created_at?.slice(0, 10);
-        assert(ts);
-        assert(event.geohash);
-        assert(map);
-        new mapboxgl.Marker()
-          .setLngLat([event.lon, event.lat])
-          .setPopup(
-            new mapboxgl.Popup().setHTML(
-              `<p><a href='/#/${ts}'>${ts}</a> - ${event.geohash} - ${String(
-                event.id
-              )}</p>`
-            )
-          )
-          .addTo(map);
+  addEventListener("move", () => {
+    if (location.hash.includes("lat=") || location.hash === "#/") {
+      debounce(() => {
+        updateUrlFromMap();
+        void addGeoHashes();
       });
-      map.fitBounds(bounds, {
-        padding: 50,
-        animate: false,
-      });
-      return;
     }
+  });
+  return map;
+};
 
-    map.on("load", () => {
+export const whenLoaded = (callback: () => void) => {
+  if (map?.isStyleLoaded()) {
+    callback();
+    return;
+  }
+  setTimeout(() => {
+    whenLoaded(callback);
+  }, 500);
+};
+
+export const render = (events: Event[], options?: { polyline: boolean }) => {
+  fetchedHashes = [];
+  const map = getMap();
+  whenLoaded(() => {
+    clear();
+    if (events.length) {
+      if (options?.polyline === false) {
+        const bounds = new mapboxgl.LngLatBounds();
+        events.map((event) => {
+          bounds.extend([event.lon, event.lat]);
+          const ts = event.created_at?.slice(0, 10);
+          assert(ts);
+          assert(event.geohash);
+          assert(map);
+          new mapboxgl.Marker()
+            .setLngLat([event.lon, event.lat])
+            .setPopup(
+              new mapboxgl.Popup().setHTML(
+                `<p><a href='/#/${ts}'>${ts}</a> - ${event.geohash} - ${String(
+                  event.id
+                )}</p>`
+              )
+            )
+            .addTo(map);
+        });
+        map.fitBounds(bounds, {
+          padding: 50,
+          animate: false,
+        });
+        return;
+      }
       const bounds = new mapboxgl.LngLatBounds();
       const polylineCoordinates = events.map((event) => {
         bounds.extend([event.lon, event.lat]);
@@ -80,18 +106,11 @@ export const render = (events: Event[], options?: { polyline: boolean }) => {
         },
       });
       map.fitBounds(bounds, {
-        padding: 50,
+        padding: 10,
         animate: false,
       });
-    });
-  }
-};
-
-export const destroy = () => {
-  if (map) {
-    map.remove();
-    map = undefined;
-  }
+    }
+  });
 };
 
 const removeLayerOrSource = ({
@@ -120,24 +139,31 @@ const removeLayerOrSource = ({
 };
 
 export const clear = (hashes?: string[]) => {
-  if (!map) {
-    return;
-  }
+  assert(map);
   const hashSet = new Set(hashes);
 
   const style = map.getStyle();
 
   style.layers.forEach((layer) => {
     removeLayerOrSource({ id: layer.id, type: "layer", hashes, hashSet });
+    if (layer.id === "polyline") {
+      map?.removeLayer(layer.id);
+    }
   });
 
   Object.keys(style.sources).forEach((sourceId) => {
     removeLayerOrSource({ id: sourceId, type: "source", hashes, hashSet });
+    if (sourceId === "polyline") {
+      map?.removeSource(sourceId);
+    }
   });
 };
 
 export const addEventListener = (event: string, callback: () => void) => {
-  map?.on(event, callback);
+  whenLoaded(() => {
+    assert(map);
+    map.on(event, callback);
+  });
 };
 
 export const getBounds = () => {

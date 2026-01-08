@@ -11,6 +11,10 @@ vi.mock("./map", () => ({
   addEventListener: (_type: string, fn: () => void) => {
     fn();
   },
+  whenLoaded: (callback: () => void) => {
+    callback();
+  },
+  setView: vi.fn(),
 }));
 
 describe("view", () => {
@@ -56,7 +60,7 @@ describe("view", () => {
         expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(
           "/api?from=2025-12-20T00:00:00.000Z&to=2025-12-21T00:00:00.000Z"
         );
-        expect(map.render).toHaveBeenCalledOnce();
+        expect(map.render).toHaveBeenCalledTimes(2);
         expect(map.render).toHaveBeenCalledWith(data, { polyline: true });
       });
 
@@ -81,7 +85,7 @@ describe("view", () => {
         expect(view.innerHTML).toContain(
           '<li><a href="/#/2025-12-01">2025-12-01</a> - 42</li>'
         );
-        expect(map.render).not.toHaveBeenCalled();
+        expect(map.render).toHaveBeenCalledOnce();
       });
     });
 
@@ -99,7 +103,7 @@ describe("view", () => {
         expect(view.innerHTML).toContain(
           '<li><a href="/#/2025-12">2025-12</a> - 42</li>'
         );
-        expect(map.render).not.toHaveBeenCalled();
+        expect(map.render).toHaveBeenCalledOnce();
       });
     });
 
@@ -128,9 +132,6 @@ describe("view", () => {
           '<li><a href="/#/2025">2025</a> - 42</li>'
         );
         expect(map.addGeoHashes).toHaveBeenCalledOnce();
-        // addEventListener move is invoked automatically in mock
-        vi.advanceTimersByTime(500);
-        expect(map.addGeoHashes).toHaveBeenCalledTimes(2);
       });
     });
 
@@ -150,7 +151,7 @@ describe("view", () => {
         expect(vi.mocked(globalThis.fetch)).toHaveBeenCalledWith(
           "/api?geohash=abc"
         );
-        expect(map.render).toHaveBeenCalledOnce();
+        expect(map.render).toHaveBeenCalledTimes(2);
         expect(map.render).toHaveBeenCalledWith(data, { polyline: false });
       });
 

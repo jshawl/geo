@@ -1,4 +1,4 @@
-import { assert, debounce } from "./utils";
+import { assert } from "./utils";
 import * as map from "./map";
 
 export type Count<T extends "year" | "month" | "day"> = Record<T, string> & {
@@ -47,7 +47,7 @@ const renderDay = async ({
   }
 };
 
-const renderMonth = async ({
+const renderDays = async ({
   view,
   year,
   month,
@@ -66,7 +66,7 @@ const renderMonth = async ({
     </ul>`;
 };
 
-const renderYear = async ({ view, year }: ViewProps<"year">) => {
+const renderMonths = async ({ view, year }: ViewProps<"year">) => {
   view.innerHTML = breadcrumbs([year]);
   const url = `/api/months?year=${year}`;
   const response = await fetch(url);
@@ -82,14 +82,10 @@ const renderYear = async ({ view, year }: ViewProps<"year">) => {
 };
 
 const renderYears = async ({ view }: ViewProps<never>) => {
-  map.render([]);
-  map.updateMapFromUrl();
-  void map.addGeoHashes();
-  map.addEventListener("move", () => {
-    debounce(() => {
-      map.updateUrlFromMap();
-      void map.addGeoHashes();
-    });
+  map.setView({ lon: -95, lat: 40, zoom: 4 });
+  map.whenLoaded(() => {
+    map.updateMapFromUrl();
+    void map.addGeoHashes();
   });
   view.innerHTML = breadcrumbs([]);
   const url = `/api/years`;
@@ -125,16 +121,17 @@ export const render = async ({
   day,
   geohash,
 }: ViewProps<"year" | "month" | "day" | "geohash">) => {
+  map.render([]);
   if (year && month && day) {
     return renderDay({ view, year, month, day });
   }
 
   if (year && month) {
-    return renderMonth({ view, year, month });
+    return renderDays({ view, year, month });
   }
 
   if (year) {
-    return renderYear({ view, year });
+    return renderMonths({ view, year });
   }
 
   if (geohash) {
