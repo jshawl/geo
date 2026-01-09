@@ -5,6 +5,7 @@ import { assert } from "./utils";
 export const main = () => {
   const app = document.querySelector<HTMLDivElement>("#app");
   assert(app);
+  location.hash ||= "#/";
   app.innerHTML = `<div class='view'></div>`;
   const view = document.querySelector(".view");
   assert(view);
