@@ -13,6 +13,12 @@ describe("main", () => {
     vi.mocked(render).mockClear();
   });
 
+  it("always has a hash", () => {
+    window.location.hash = "";
+    main();
+    expect(window.location.hash).toBe("#/");
+  });
+
   it("calls render", () => {
     main();
     expect(render).toHaveBeenCalledOnce();
