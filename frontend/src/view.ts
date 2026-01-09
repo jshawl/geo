@@ -1,5 +1,6 @@
 import { assert } from "./utils";
 import * as map from "./map";
+import { prev, next } from "./date";
 
 export type Count<T extends "year" | "month" | "day"> = Record<T, string> & {
   count: string;
@@ -13,14 +14,25 @@ type ViewProps<T extends string> = {
   geohash?: string;
 } & Record<T, string>;
 
-export const breadcrumbs = (strings: string[]) =>
-  `<h2><a href='/#/'>~/</a> ` +
-  strings
-    .map((el, i, all) => {
-      return `<a href='/#/${all.slice(0, i + 1).join("-")}'>${el}</a>`;
-    })
-    .join("-") +
-  `</h2>`;
+export const breadcrumbs = (strings: string[]) => {
+  const previous = strings.length
+    ? `<a href='/#/${prev(strings.join("-"))}'>&laquo;</a>`
+    : "";
+  const nexts = strings.length
+    ? `<a href='/#/${next(strings.join("-"))}'>&raquo;</a>`
+    : "";
+  return (
+    `<h2><a href='/#/'>~/</a> ` +
+    previous +
+    strings
+      .map((el, i, all) => {
+        return `<a href='/#/${all.slice(0, i + 1).join("-")}'>${el}</a>`;
+      })
+      .join("-") +
+    nexts +
+    `</h2>`
+  );
+};
 
 const renderDay = async ({
   view,
