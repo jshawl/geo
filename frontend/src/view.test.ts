@@ -68,7 +68,7 @@ describe("view", () => {
         const data: map.Event[] = [];
         vi.mocked(globalThis.fetch).mockResolvedValueOnce(Response.json(data));
         await render({ view, year, month, day, geohash });
-        expect(view.innerHTML).toContain("No events found.");
+        expect(view.innerHTML).toContain("0 events");
       });
     });
 

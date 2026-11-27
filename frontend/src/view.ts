@@ -50,12 +50,11 @@ const renderDay = async ({
   const url = `/api?from=${from}&to=${to}`;
   const response = await fetch(url);
   const data = (await response.json()) as map.Event[];
+  view.innerHTML += `${new Date(parsed).toLocaleString('en-us', {  weekday: 'long' })} - ${String(data.length)} events`
   if (data.length > 0) {
     map.render(data, {
       polyline: !location.hash.includes("polyline=false"),
     });
-  } else {
-    view.innerHTML += "No events found.";
   }
 };
 
