@@ -2,8 +2,8 @@ const shift = (dateStr: string, by: number) => {
   const [year, month, day] = dateStr.split("-");
   const date = new Date(
     parseInt(year),
-    parseInt(month ?? 1) - 1,
-    parseInt(day ?? 1) || 1
+    parseInt(month || 1) - 1,
+    parseInt(day || 1) || 1
   );
   if (!month) {
     date.setFullYear(date.getFullYear() + by);
