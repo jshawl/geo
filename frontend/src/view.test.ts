@@ -22,10 +22,10 @@ describe("view", () => {
     it("makes each part of the date clickable", () => {
       expect(breadcrumbs([])).toBe("<h2><a href='/#/'>~/</a> </h2>");
       expect(breadcrumbs(["2025"])).toBe(
-        "<h2><a href='/#/'>~/</a> <a href='/#/2025'>2025</a></h2>"
+        "<h2><a href='/#/'>~/</a> <a href='/#/2024' class='prev'>&laquo;</a><a href='/#/2025'>2025</a><a href='/#/2026' class='next'>&raquo;</a></h2>"
       );
       expect(breadcrumbs(["2025", "12"])).toBe(
-        "<h2><a href='/#/'>~/</a> <a href='/#/2025'>2025</a>-<a href='/#/2025-12'>12</a></h2>"
+        "<h2><a href='/#/'>~/</a> <a href='/#/2025-11' class='prev'>&laquo;</a><a href='/#/2025'>2025</a>-<a href='/#/2025-12'>12</a><a href='/#/2026-01' class='next'>&raquo;</a></h2>"
       );
     });
   });
