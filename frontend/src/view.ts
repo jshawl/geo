@@ -16,10 +16,10 @@ type ViewProps<T extends string> = {
 
 export const breadcrumbs = (strings: string[]) => {
   const previous = strings.length
-    ? `<a href='/#/${prev(strings.join("-"))}'>&laquo;</a>`
+    ? `<a href='/#/${prev(strings.join("-"))}' class='prev'>&laquo;</a>`
     : "";
   const nexts = strings.length
-    ? `<a href='/#/${next(strings.join("-"))}'>&raquo;</a>`
+    ? `<a href='/#/${next(strings.join("-"))}' class='next'>&raquo;</a>`
     : "";
   return (
     `<h2><a href='/#/'>~/</a> ` +
