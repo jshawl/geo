@@ -4,3 +4,7 @@
   width: 100vw;
   position: absolute;
 }
+
+.prev, .next {
+  padding: 0.5rem;
+}
