@@ -3,7 +3,7 @@ const shift = (dateStr: string, by: number) => {
   const date = new Date(
     parseInt(year),
     parseInt(month || "1") - 1,
-    parseInt(day || "1") || 1
+    parseInt(day || "1")
   );
   if (!month) {
     date.setFullYear(date.getFullYear() + by);
